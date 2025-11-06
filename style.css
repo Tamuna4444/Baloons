@@ -1,0 +1,152 @@
+/* ფონად შენი სურათი */
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+}
+body {
+  background: url(./image/image.png) no-repeat center center / cover;
+}
+
+/* ზედა სათამაშო სივრცე */
+#gameArea {
+  position: relative;
+  height: 70vh;
+  overflow: hidden;
+  z-index: 5;
+}
+
+/* ქვედა ქუჩა/სახლები */
+.street {
+  position: absolute;
+  left: 0; right: 0; bottom: 36px;
+  display: flex;
+  justify-content: center;
+  gap: 80px;
+  z-index: 6;
+}
+.house { width: 180px; }
+.house img {
+  width: 100%;
+  height: auto;
+  user-select: none;
+  pointer-events: none; /* ბუშტს ხელი არ შეუშალოს */
+  filter: drop-shadow(0 5px 10px rgba(0,0,0,.4));
+  transition: transform .25s ease;
+}
+.house.glow img {
+  transform: translateY(-10px) scale(1.05);
+  filter: drop-shadow(0 0 24px rgba(255, 255, 255, .9));
+}
+
+/* ბუშტები (უშუალოდ JS ამოძრავებს) */
+.balloon {
+  position: absolute;
+  top: -100px;
+  width: 60px; height: 80px;
+  border-radius: 50%;
+  box-shadow: inset 0 12px 20px rgba(255,255,255,.6);
+  z-index: 10;
+}
+.balloon::after {
+  content: "";
+  position: absolute;
+  bottom: -28px; left: 50%;
+  width: 2px; height: 28px;
+  background: #555; transform: translateX(-50%);
+}
+.balloon.red   { background: #ff5c5c; }
+.balloon.green { background: #5cd65c; }
+.balloon.blue  { background: #4a90e2; }
+
+/* ქულები */
+#score {
+  position: absolute; top: 14px; left: 14px;
+  padding: 6px 10px; border-radius: 10px;
+  background: #ffffffb0; backdrop-filter: blur(4px);
+  font-weight: 700;
+}
+.balloon {
+  cursor: grab;
+}
+
+.balloon.dragging {
+  cursor: grabbing;
+}
+/* მცირე ბუშტების კალათა სახურავზე */
+.house { position: relative; }
+.stack {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 6px;
+}
+.stack .mini {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  border: 1px solid rgba(0,0,0,.2);
+  box-shadow: 0 1px 2px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.8);
+}
+
+/* ფერები პატარა წერტილებისთვის */
+.mini.red   { background: #ff5c5c; }
+.mini.green { background: #5cd65c; }
+.mini.blue  { background: #4a90e2; }
+
+/* გაფრენის ეფექტი სახლზე */
+.house.fly { animation: flyUp 1.2s ease-in forwards; }
+@keyframes flyUp {
+  0%   { transform: translateY(0) scale(1); opacity: 1; }
+  60%  { transform: translateY(-55vh) scale(1.04); }
+  100% { transform: translateY(-110vh) scale(1.04); opacity: 0; }
+}
+/* სადაც შეიკრებიან ბუშტები სახურავზე */
+.house { position: relative; }
+/* 좁ე და დაბლა ჩამოწეული ჰიტბოქსი */
+.anchor{
+  position:absolute;
+  top:-70px;          /* ადრე -90px — ოდნავ დაბლა */
+  left:50%;
+  transform:translateX(-50%);
+  width:80px;         /* ადრე 120px — ვაკლებთ, რომ მეზობელს აღარ შეეხოს */
+  height:80px;        /* ადრე 110px */
+  pointer-events:none;
+}
+
+/* თითო მიმაგრებული ბუშტი */
+.anchor .tether{
+  position:absolute;
+  bottom:18px; left:50%;
+  width:2px; height:40px;
+  background:#666;
+  transform-origin:top;
+}
+.anchor .b{
+  position:absolute;
+  width:28px; height:36px;
+  border-radius:50%;
+  box-shadow: inset 0 12px 18px rgba(255,255,255,.7);
+}
+
+/* ფერები */
+.b.red   { background:#ff5c5c; }
+.b.green { background:#5cd65c; }
+.b.blue  { background:#4a90e2; }
+
+/* მსუბუქი რხევა მხოლოდ მიმაგრებულებზე */
+.anchor.sway { animation:sway 1.6s ease-in-out infinite; }
+@keyframes sway { 0%,100%{ transform:translateX(-50%) rotate(-2deg);} 50%{ transform:translateX(-50%) rotate(2deg);} }
+
+/* სახლის გაფრენა */
+.house.fly { animation:flyUp 1.4s ease-in forwards; }
+@keyframes flyUp{
+  0%{ transform:translateY(0) scale(1); opacity:1; }
+  60%{ transform:translateY(-55vh) scale(1.03); }
+  100%{ transform:translateY(-110vh) scale(1.03); opacity:0; }
+}
+
+/* მცირე UX */
+.balloon{ cursor:grab; }
+.balloon.dragging{ cursor:grabbing; }
