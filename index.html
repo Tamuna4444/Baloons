@@ -8,14 +8,20 @@
 </head>
 
 <body>
+  <!-- MAIN MENU SCREEN -->
+<div id="mainMenu" class="main-menu">
+  <div class="menu-content">
+    <button id="startBtn" class="start-button">Start</button>
+  </div>
+</div>
   <!-- მთავარი ეკრანი/თამაში -->
   <div id="mainScreen">
     <!-- ღილაკები ზედა მარჯვნივ -->
-    <div class="top-right-buttons">
-      <button id="btnShop" class="btn-small">Shop</button>
-      <button id="btnMap" class="btn-circle">🗺️</button>
-      <button id="btnSettings" class="btn-circle">⚙</button>
-    </div>
+ <div class="top-right-buttons">
+  <button id="btnShop" class="btn-small">Shop</button>
+  <button id="btnHouse" class="btn-circle">🏡</button>
+  <button id="btnSettings" class="btn-circle">⚙</button>
+</div>
 
     <div id="gameArea"></div>
 
@@ -91,6 +97,24 @@
 
     </div>
   </div>
+  <!-- HOUSE BUILDING SCREEN -->
+<div id="houseScreen" class="panel hidden">
+  <div class="house-box">
+
+    <h2 class="house-title">My House</h2>
+
+    <div class="house-area">
+      <img id="houseBase" src="./image/house-base.png" class="house-layer">
+
+      <img id="upgrade-flag" src="./image/flag.png" class="house-layer hidden">
+      <img id="upgrade-chimney" src="./image/chimney.png" class="house-layer hidden">
+      <img id="upgrade-flowers" src="./image/flowers.png" class="house-layer hidden">
+      <!-- აქ სხვა layer-ებსაც დავამატებთ -->
+    </div>
+
+    <button id="btnCloseHouse" class="btn-shop-close">Close</button>
+  </div>
+</div>
 
   <script src="./script.js" defer></script>
 </body>

@@ -1,16 +1,21 @@
-// ========================
-//   SCREENS & BUTTONS
-// ========================
+const mainMenu = document.getElementById('mainMenu');
+const startBtn = document.getElementById('startBtn');
+let gameStarted = false;
 
+startBtn.addEventListener('click', () => {
+  mainMenu.classList.add('hidden');
+  gameStarted = true;
+});
 // ეკრანები
 const mainScreen = document.getElementById('mainScreen');
 const shopScreen = document.getElementById('shopScreen');
 
 // ღილაკები
 const btnShop = document.getElementById('btnShop');
-const btnMap = document.getElementById('btnMap');
+const btnHouse = document.getElementById('btnHouse');
 const btnSettings = document.getElementById('btnSettings');
 const btnBackFromShop = document.getElementById('btnBackFromShop');
+
 
 const shopPointsEl = document.getElementById('shopPoints');
 
@@ -30,14 +35,9 @@ btnBackFromShop.addEventListener('click', () => {
   mainScreen.classList.remove('hidden');
 });
 
-// Map & Settings დროებით
-btnMap.addEventListener('click', () => alert("Map არის პროცესში 🗺️"));
-btnSettings.addEventListener('click', () => alert("Settings მალე ⚙️"));
 
-// ----- SELECTORS / STATE -----
-// ========================
-//   GAME LOGIC
-// ========================
+
+
 
 const gameArea = document.getElementById('gameArea');
 const houses   = [...document.querySelectorAll('.house')];
@@ -47,7 +47,10 @@ const scoreEl  = document.getElementById('score');
 const COLORS = houses.map(h => (h.dataset.color || '').trim().toLowerCase());
 
 // --- SPAWN BALLOONS ---
-setInterval(spawnBalloon, 1400);
+setInterval(() => {
+  if (!gameStarted) return;
+  spawnBalloon();
+}, 1400);
 
 function spawnBalloon() {
   const color = COLORS[Math.floor(Math.random() * COLORS.length)];
@@ -225,12 +228,41 @@ shopItems.forEach(item => {
 
 function applyUpgrade(name) {
   if (name === "flag") {
-    document.getElementById("house-red").classList.add("upgrade-flag");
+    const red = document.getElementById("house-red");
+    if (red) red.classList.add("upgrade-flag");
+
+    const layerFlag = document.getElementById("upgrade-flag");
+    if (layerFlag) layerFlag.classList.remove("hidden");
   }
+
   if (name === "chimney") {
-    document.getElementById("house-blue").classList.add("upgrade-chimney");
+    const blue = document.getElementById("house-blue");
+    if (blue) blue.classList.add("upgrade-chimney");
+
+    const layerChimney = document.getElementById("upgrade-chimney");
+    if (layerChimney) layerChimney.classList.remove("hidden");
   }
+
   if (name === "flowers") {
-    document.getElementById("house-green").classList.add("upgrade-flowers");
+    const green = document.getElementById("house-green");
+    if (green) green.classList.add("upgrade-flowers");
+
+    const layerFlowers = document.getElementById("upgrade-flowers");
+    if (layerFlowers) layerFlowers.classList.remove("hidden");
   }
 }
+// HOUSE SCREEN LOGIC
+
+
+const houseScreen   = document.getElementById('houseScreen');
+const btnCloseHouse = document.getElementById('btnCloseHouse');
+
+btnHouse.addEventListener('click', () => {
+  mainScreen.classList.add('hidden');
+  houseScreen.classList.remove('hidden');
+});
+
+btnCloseHouse.addEventListener('click', () => {
+  houseScreen.classList.add('hidden');
+  mainScreen.classList.remove('hidden');
+});
