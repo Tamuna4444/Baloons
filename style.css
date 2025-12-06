@@ -150,3 +150,453 @@ body {
 /* მცირე UX */
 .balloon{ cursor:grab; }
 .balloon.dragging{ cursor:grabbing; }
+
+
+
+/* მთავარი ეკრანი */
+.menu-screen {
+  position: fixed;
+  inset: 0;
+  background: url("./image/menu-bg.png") center center / cover no-repeat;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* ოდნავ გამუქებული/დარბილებული, რომ ტექსტი გამოჩნდეს */
+.menu-screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0,0,0,0.35),
+    rgba(255,255,255,0.05)
+  );
+}
+
+/* შიგთავსი */
+.menu-inner {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 24px 28px;
+  border-radius: 24px;
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+
+.menu-title {
+  font-size: 32px;
+  color: #fff7e8;
+  text-shadow: 0 3px 8px rgba(0,0,0,0.7);
+  margin-bottom: 18px;
+}
+
+/* დიდი Start ღილაკი */
+.btn-main {
+  display: inline-block;
+  padding: 14px 40px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #ffb347, #ff6b6b);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+  margin-bottom: 16px;
+}
+
+/* ქვედა ღილაკები */
+.menu-buttons-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+/* Shop – ოვალური ღილაკი */
+.btn-small {
+  padding: 10px 20px;
+  border-radius: 18px;
+  border: none;
+  background: #ffe082;
+  color: #6d4c00;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* პატარა მრგვალი ღილაკები (Map, Settings) */
+.btn-circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  background: #ffffff;
+  cursor: pointer;
+  font-size: 22px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* პატარა ჰოვერი – ლაივი რომ იყოს */
+.btn-main:hover,
+.btn-small:hover,
+.btn-circle:hover {
+  transform: translateY(-2px);
+}
+/* === GOLDEN SHOP BUTTON === */
+.btn-shop {
+  padding: 10px 22px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(180deg, #ffe8a3, #f5c254);
+  color: #6b4a00;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25), 
+              inset 0 2px 4px rgba(255,255,255,0.8);
+  transition: 0.15s ease;
+}
+
+.btn-shop:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+}
+
+.btn-shop:active {
+  transform: translateY(1px);
+}
+
+/* === ROUND ICON BUTTONS (Map, Settings) === */
+.btn-round {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(180deg, #ffffff, #e5e5e5);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2), 
+              inset 0 2px 3px rgba(255,255,255,0.8);
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: 0.15s ease;
+}
+
+.btn-round:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+}
+
+.btn-round:active {
+  transform: translateY(1px);
+}
+.hidden {
+  display: none;
+}
+
+/* Overlay ფონი */
+.panel {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+/* შიდა ფანჯარა */
+.panel-inner {
+  background: #fdfdfd;
+  padding: 20px 18px;
+  border-radius: 18px;
+  width: 90%;
+  max-width: 380px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+  font-size: 14px;
+}
+
+/* Shop-ის შიგთავსი */
+.shop-points {
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.shop-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.shop-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.shop-item .price {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.shop-item.owned {
+  opacity: 0.6;
+}
+
+.shop-item .buy-btn {
+  padding: 6px 10px;
+  font-size: 13px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  background: #4caf50;
+  color: #fff;
+}
+
+/* Close ღილაკი */
+.btn-shop-close {
+  width: 100%;
+  margin-top: 6px;
+  padding: 8px 0;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  background: #e0e0e0;
+}
+/* ღილაკები ზედა მარჯვენა კუთხეში */
+.top-right-buttons {
+  position: absolute;   /* ან თუ გინდა, შეიძლება fixed-იც */
+  top: 20px;
+  right: 20px;
+  display: flex;
+  gap: 10px;
+  z-index: 10;
+}
+.hidden {
+  display: none;
+}
+
+/* Shop მთელი ეკრანი */
+#shopScreen {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.15); /* სურვილისამებრ – შეგიძლია იგივე ფონი, რაც main-ს აქვს */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 50;
+}
+
+/* შიგა Shop კონტეინერი */
+.shop-page {
+  width: 90%;
+  max-width: 420px;
+  background: #fdfdfd;
+  border-radius: 24px;
+  padding: 18px 18px 20px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+
+/* Header: Back + points */
+.shop-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.shop-points-big {
+  font-weight: 600;
+}
+
+/* Shop grid – იგივე, რაც ადრე გავაკეთეთ */
+.shop-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* დარჩენილი shop-item, shop-preview, shop-info, shop-meta სტილები როგორც უკვე გაქვს */
+/* ახალი Shop განლაგება */
+.shop-panel h2 {
+  margin-top: 0;
+  margin-bottom: 6px;
+}
+
+.shop-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 10px 0 16px;
+}
+
+.shop-item {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+  padding: 8px 10px;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+
+.shop-preview {
+  width: 64px;
+  border-radius: 12px;
+  background: #f3f3f3;
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.7);
+  position: relative;
+}
+
+/* პატარა ნახატები preview-ში – მხოლოდ CSS-ით */
+.preview-flag {
+  background: linear-gradient(180deg, #ffcc80, #ffb74d);
+}
+.preview-flag::before {
+  content:"";
+  position:absolute;
+  bottom:10px; left:22px;
+  width:2px; height:26px;
+  background:#795548;
+}
+.preview-flag::after {
+  content:"";
+  position:absolute;
+  bottom:28px; left:24px;
+  border-top:8px solid transparent;
+  border-bottom:8px solid transparent;
+  border-left:14px solid #ff5252;
+}
+
+.preview-chimney {
+  background: linear-gradient(180deg, #bbdefb, #90caf9);
+}
+.preview-chimney::before {
+  content:"";
+  position:absolute;
+  bottom:10px; left:22px;
+  width:20px; height:24px;
+  border-radius:3px;
+  background:#8d6e63;
+}
+.preview-chimney::after {
+  content:"";
+  position:absolute;
+  bottom:34px; left:26px;
+  width:12px; height:6px;
+  border-radius:3px;
+  background:rgba(255,255,255,0.7);
+}
+
+.preview-flowers {
+  background: linear-gradient(180deg, #c8e6c9, #a5d6a7);
+}
+.preview-flowers::before {
+  content:"";
+  position:absolute;
+  bottom:10px; left:14px;
+  width:36px; height:12px;
+  border-radius:12px;
+  background:#4caf50;
+}
+.preview-flowers::after {
+  content:"";
+  position:absolute;
+  bottom:20px; left:18px;
+  width:28px; height:10px;
+  background:
+    radial-gradient(circle at 4px 5px,  #ff5252 0 3px, transparent 4px),
+    radial-gradient(circle at 14px 5px, #ffeb3b 0 3px, transparent 4px),
+    radial-gradient(circle at 24px 5px, #ff80ab 0 3px, transparent 4px);
+}
+
+/* ტექსტის ნაწილი */
+.shop-info h3 {
+  margin: 2px 0 4px;
+  font-size: 15px;
+}
+.shop-info p {
+  margin: 0;
+  font-size: 12px;
+  color: #555;
+}
+
+/* ფასი + ღილაკი ერთ ხაზზე */
+.shop-meta {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.shop-item .price {
+  font-weight: 700;
+  font-size: 13px;
+}
+/* --- Upgrades on houses (after buying in shop) --- */
+
+/* Flag on red house roof */
+#house-red.upgrade-flag::before,
+#house-red.upgrade-flag::after {
+  content:"";
+  position:absolute;
+}
+#house-red.upgrade-flag::before {
+  top:-40px; left:58%;
+  width:2px; height:26px;
+  background:#6d4c41;
+}
+#house-red.upgrade-flag::after {
+  top:-38px; left:60%;
+  border-top:8px solid transparent;
+  border-bottom:8px solid transparent;
+  border-left:16px solid #ff5252;
+  filter: drop-shadow(0 2px 3px rgba(0,0,0,0.35));
+}
+
+/* Chimney on blue house */
+#house-blue.upgrade-chimney::after {
+  content:"";
+  position:absolute;
+  top:-30px; left:62%;
+  width:20px; height:26px;
+  border-radius:3px;
+  background:#8d6e63;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.35);
+}
+
+/* Flowers in front of green house */
+#house-green.upgrade-flowers::after {
+  content:"";
+  position:absolute;
+  bottom:-6px; left:50%;
+  transform: translateX(-50%);
+  width:70px; height:18px;
+  border-radius:16px;
+  background:
+    radial-gradient(circle at 10px 6px,#ff5252 0 4px,transparent 5px),
+    radial-gradient(circle at 28px 10px,#ffeb3b 0 4px,transparent 5px),
+    radial-gradient(circle at 48px 7px,#ff80ab 0 4px,transparent 5px),
+    linear-gradient(180deg,#4caf50,#2e7d32);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.35);
+}
+#shopScreen.hidden {
+  display: none;
+}
+
+#mainScreen.hidden {
+  display: none;
+}

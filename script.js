@@ -1,13 +1,52 @@
+// ========================
+//   SCREENS & BUTTONS
+// ========================
+
+// ეკრანები
+const mainScreen = document.getElementById('mainScreen');
+const shopScreen = document.getElementById('shopScreen');
+
+// ღილაკები
+const btnShop = document.getElementById('btnShop');
+const btnMap = document.getElementById('btnMap');
+const btnSettings = document.getElementById('btnSettings');
+const btnBackFromShop = document.getElementById('btnBackFromShop');
+
+const shopPointsEl = document.getElementById('shopPoints');
+
+// ქულების ცვლადი
+let score = 0;
+
+// --- Shop გახსნა ---
+btnShop.addEventListener('click', () => {
+  shopPointsEl.textContent = score;
+  mainScreen.classList.add('hidden');
+  shopScreen.classList.remove('hidden');
+});
+
+// --- Shop Back (დაბრუნება თამაშზე) ---
+btnBackFromShop.addEventListener('click', () => {
+  shopScreen.classList.add('hidden');
+  mainScreen.classList.remove('hidden');
+});
+
+// Map & Settings დროებით
+btnMap.addEventListener('click', () => alert("Map არის პროცესში 🗺️"));
+btnSettings.addEventListener('click', () => alert("Settings მალე ⚙️"));
+
 // ----- SELECTORS / STATE -----
+// ========================
+//   GAME LOGIC
+// ========================
+
 const gameArea = document.getElementById('gameArea');
 const houses   = [...document.querySelectorAll('.house')];
 const scoreEl  = document.getElementById('score');
-let score = 0;
 
-// ფერების სია პირდაპირ სახლებიდან
+// ფერების სია სახლებიდან
 const COLORS = houses.map(h => (h.dataset.color || '').trim().toLowerCase());
 
-// ----- SPAWN -----
+// --- SPAWN BALLOONS ---
 setInterval(spawnBalloon, 1400);
 
 function spawnBalloon() {
@@ -26,7 +65,7 @@ function spawnBalloon() {
   fall(b);
 }
 
-// ----- FALL LOOP -----
+// --- BALLOON FALL ---
 function fall(balloon) {
   let y = -100, vy = 1.6, alive = true;
 
@@ -35,7 +74,7 @@ function fall(balloon) {
     y += vy;
     balloon.style.top = `${y}px`;
 
-    if (tryAttach(balloon)) {           // დამაგრდა
+    if (tryAttach(balloon)) {
       alive = false;
       balloon.remove();
       return;
@@ -46,52 +85,71 @@ function fall(balloon) {
       balloon.remove();
       return;
     }
+
     requestAnimationFrame(step);
   };
+
   requestAnimationFrame(step);
 }
 
-// ----- ONLY CHECK THE HOUSE WITH THE SAME COLOR -----
+// --- HITBOX CHECK ---
 function tryAttach(balloon) {
-  const color = (balloon.dataset.color || '').trim().toLowerCase();
-  const house = document.querySelector(`.house[data-color="${color}"]`);
-  if (!house) return false;
+  const color = balloon.dataset.color.toLowerCase();
 
   const br = balloon.getBoundingClientRect();
   const bx = (br.left + br.right) / 2;
   const by = br.bottom;
 
-  const anchor = house.querySelector('.anchor');
-  const ar = anchor.getBoundingClientRect();
+  let targetHouse = null;
 
-  const inside = bx >= ar.left && bx <= ar.right && by >= ar.top && by <= ar.bottom;
-  if (!inside) return false;
+  for (const house of houses) {
+    const anchor = house.querySelector('.anchor');
+    const ar = anchor.getBoundingClientRect();
 
-  attachToRoof(house, color);
-  score++;
-  scoreEl.textContent = 'Score: ' + score;
+    if (bx >= ar.left && bx <= ar.right && by >= ar.top && by <= ar.bottom) {
+      targetHouse = house;
+      break;
+    }
+  }
 
-  const need = +house.dataset.need || 3;
-  const has  = +house.dataset.has  || 0;
-  if (has >= need) flyHouse(house);
+  if (!targetHouse) return false;
+
+  const houseColor = targetHouse.dataset.color.toLowerCase();
+
+  if (houseColor === color) {
+    attachToRoof(targetHouse, color);
+
+    score++;
+    scoreEl.textContent = "Score: " + score;
+
+    const need = +targetHouse.dataset.need || 5;
+    const has  = +targetHouse.dataset.has || 0;
+
+    if (has >= need) flyHouse(targetHouse);
+  } else {
+    score = Math.max(0, score - 1);
+    scoreEl.textContent = "Score: " + score;
+  }
 
   return true;
 }
 
-// ----- VISUAL ATTACH -----
+// --- ADD BALLOON TO HOUSE ---
 function attachToRoof(house, color) {
   house.dataset.has = String((+house.dataset.has || 0) + 1);
+
   const anchor = house.querySelector('.anchor');
   anchor.classList.add('sway');
 
   const idx = anchor.querySelectorAll('.b').length;
-  const spots = [{x:-30,y:0},{x:0,y:5},{x:30,y:0},{x:-18,y:26},{x:18,y:26}];
-  const s = spots[Math.min(idx, spots.length-1)];
+  const spots = [
+    {x:-30,y:0},{x:0,y:5},{x:30,y:0},{x:-18,y:26},{x:18,y:26}
+  ];
+  const s = spots[Math.min(idx, spots.length - 1)];
 
   const tether = document.createElement('div');
   tether.className = 'tether';
   tether.style.left = `calc(50% + ${s.x}px)`;
-  tether.style.height = '44px';
 
   const bub = document.createElement('div');
   bub.className = `b ${color}`;
@@ -102,13 +160,13 @@ function attachToRoof(house, color) {
   anchor.appendChild(bub);
 }
 
-// ----- HOUSE FLY -----
+// --- FLY HOUSE ---
 function flyHouse(h) {
   h.classList.add('fly');
   setTimeout(() => h.remove(), 1400);
 }
 
-// ----- HORIZONTAL DRAG ONLY -----
+// --- DRAG BALLOON ---
 function enableDragX(el) {
   let dragging = false, startX = 0, baseX = 0;
 
@@ -116,10 +174,10 @@ function enableDragX(el) {
     if (!dragging) return;
     let nx = baseX + (e.clientX - startX);
     const max = gameArea.getBoundingClientRect().width - 60;
-    if (nx < 0) nx = 0;
-    if (nx > max) nx = max;
+    nx = Math.max(0, Math.min(max, nx));
     el.style.left = `${nx}px`;
   };
+
   const up = () => {
     dragging = false;
     el.classList.remove('dragging');
@@ -134,4 +192,45 @@ function enableDragX(el) {
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up, { once: true });
   });
+}
+
+// ========================
+//      SHOP SYSTEM
+// ========================
+const shopItems = document.querySelectorAll('.shop-item');
+
+shopItems.forEach(item => {
+  const btn = item.querySelector('.buy-btn');
+  const cost = +item.dataset.cost;
+
+  btn.addEventListener('click', () => {
+    if (item.classList.contains("owned")) return;
+
+    if (score < cost) {
+      alert("Not enough points!");
+      return;
+    }
+
+    score -= cost;
+    scoreEl.textContent = "Score: " + score;
+    shopPointsEl.textContent = score;
+
+    item.classList.add("owned");
+    btn.textContent = "Bought";
+    btn.disabled = true;
+
+    applyUpgrade(item.dataset.upgrade);
+  });
+});
+
+function applyUpgrade(name) {
+  if (name === "flag") {
+    document.getElementById("house-red").classList.add("upgrade-flag");
+  }
+  if (name === "chimney") {
+    document.getElementById("house-blue").classList.add("upgrade-chimney");
+  }
+  if (name === "flowers") {
+    document.getElementById("house-green").classList.add("upgrade-flowers");
+  }
 }

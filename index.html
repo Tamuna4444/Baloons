@@ -6,28 +6,92 @@
   <title>Balloons</title>
   <link rel="stylesheet" href="./style.css" />
 </head>
+
 <body>
-  <div id="gameArea"></div>
-  
+  <!-- მთავარი ეკრანი/თამაში -->
+  <div id="mainScreen">
+    <!-- ღილაკები ზედა მარჯვნივ -->
+    <div class="top-right-buttons">
+      <button id="btnShop" class="btn-small">Shop</button>
+      <button id="btnMap" class="btn-circle">🗺️</button>
+      <button id="btnSettings" class="btn-circle">⚙</button>
+    </div>
 
-  <div class="street" id="street">
-  <div id="house-red"   class="house" data-color="red"   data-need="3" data-has="0">
-    <img src="./image/redh.png" alt="Red House" />
-    <div class="anchor"></div>
+    <div id="gameArea"></div>
+
+    <div class="street" id="street">
+      <div id="house-red" class="house" data-color="red" data-need="5" data-has="0">
+        <img src="./image/redh.png" alt="Red House" />
+        <div class="anchor"></div>
+      </div>
+
+      <div id="house-blue" class="house" data-color="blue" data-need="5" data-has="0">
+        <img src="./image/blueh.png" alt="Blue House" />
+        <div class="anchor"></div>
+      </div>
+
+      <div id="house-green" class="house" data-color="green" data-need="5" data-has="0">
+        <img src="./image/greenh.png" alt="Green House" />
+        <div class="anchor"></div>
+      </div>
+    </div>
+
+    <div id="score">Score: 0</div>
   </div>
 
-<div id="house-blue" class="house" data-color="blue" data-need="3" data-has="0">
-  <img src="./image/blueh.png" alt="Blue House" />
-  <div class="anchor"></div>
-</div>
+  <!-- SHOP ეკრანი (ცალკე screen) -->
+  <div id="shopScreen" class="hidden">
+    <div class="shop-page">
+      <div class="shop-header">
+        <button id="btnBackFromShop" class="btn-small">← Back</button>
+        <div class="shop-points-big">
+          Your points: <span id="shopPoints">0</span>
+        </div>
+      </div>
 
-  <div id="house-green" class="house" data-color="green" data-need="3" data-has="0">
-    <img src="./image/greenh.png" alt="Green House" />
-    <div class="anchor"></div>
+      <h2>House Shop</h2>
+
+      <div class="shop-grid">
+        <div class="shop-item" data-cost="5" data-upgrade="flag">
+          <div class="shop-preview preview-flag"></div>
+          <div class="shop-info">
+            <h3>Small Flag</h3>
+            <p>Add a cute flag to the red house roof.</p>
+            <div class="shop-meta">
+              <span class="price">5 pts</span>
+              <button class="buy-btn">Buy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="shop-item" data-cost="10" data-upgrade="chimney">
+          <div class="shop-preview preview-chimney"></div>
+          <div class="shop-info">
+            <h3>Cozy Chimney</h3>
+            <p>Add a warm chimney to the blue house.</p>
+            <div class="shop-meta">
+              <span class="price">10 pts</span>
+              <button class="buy-btn">Buy</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="shop-item" data-cost="15" data-upgrade="flowers">
+          <div class="shop-preview preview-flowers"></div>
+          <div class="shop-info">
+            <h3>Flower Garden</h3>
+            <p>Plant flowers around the green house.</p>
+            <div class="shop-meta">
+              <span class="price">15 pts</span>
+              <button class="buy-btn">Buy</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
-</div>
-  <div id="score">Score: 0</div>
 
- <script src="./script.js?v=9" defer></script>
+  <script src="./script.js" defer></script>
 </body>
 </html>
