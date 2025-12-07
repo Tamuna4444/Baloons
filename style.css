@@ -461,67 +461,12 @@ body {
   position: relative;
 }
 
-/* პატარა ნახატები preview-ში – მხოლოდ CSS-ით */
-.preview-flag {
-  background: linear-gradient(180deg, #ffcc80, #ffb74d);
-}
-.preview-flag::before {
-  content:"";
-  position:absolute;
-  bottom:10px; left:22px;
-  width:2px; height:26px;
-  background:#795548;
-}
-.preview-flag::after {
-  content:"";
-  position:absolute;
-  bottom:28px; left:24px;
-  border-top:8px solid transparent;
-  border-bottom:8px solid transparent;
-  border-left:14px solid #ff5252;
-}
 
-.preview-chimney {
-  background: linear-gradient(180deg, #bbdefb, #90caf9);
-}
-.preview-chimney::before {
-  content:"";
-  position:absolute;
-  bottom:10px; left:22px;
-  width:20px; height:24px;
-  border-radius:3px;
-  background:#8d6e63;
-}
-.preview-chimney::after {
-  content:"";
-  position:absolute;
-  bottom:34px; left:26px;
-  width:12px; height:6px;
-  border-radius:3px;
-  background:rgba(255,255,255,0.7);
-}
 
-.preview-flowers {
-  background: linear-gradient(180deg, #c8e6c9, #a5d6a7);
-}
-.preview-flowers::before {
-  content:"";
-  position:absolute;
-  bottom:10px; left:14px;
-  width:36px; height:12px;
-  border-radius:12px;
-  background:#4caf50;
-}
-.preview-flowers::after {
-  content:"";
-  position:absolute;
-  bottom:20px; left:18px;
-  width:28px; height:10px;
-  background:
-    radial-gradient(circle at 4px 5px,  #ff5252 0 3px, transparent 4px),
-    radial-gradient(circle at 14px 5px, #ffeb3b 0 3px, transparent 4px),
-    radial-gradient(circle at 24px 5px, #ff80ab 0 3px, transparent 4px);
-}
+
+
+
+
 
 /* ტექსტის ნაწილი */
 .shop-info h3 {
@@ -593,6 +538,8 @@ body {
     linear-gradient(180deg,#4caf50,#2e7d32);
   box-shadow: 0 2px 4px rgba(0,0,0,0.35);
 }
+.balloon.yellow { background: #ffd54f; }
+.b.yellow       { background: #ffd54f; }
 #shopScreen.hidden {
   display: none;
 }
@@ -662,4 +609,9 @@ body {
 
 .hidden {
   display: none;
+}
+.house.bonus-glow img {
+  filter: drop-shadow(0 0 20px rgba(255, 255, 0, 0.9));
+  transform: translateY(-4px) scale(1.03);
+  transition: 0.2s ease;
 }
