@@ -105,39 +105,58 @@ body {
 /* სადაც შეიკრებიან ბუშტები სახურავზე */
 .house { position: relative; }
 /* 좁ე და დაბლა ჩამოწეული ჰიტბოქსი */
-.anchor{
-  position:absolute;
-  top:-70px;          /* ადრე -90px — ოდნავ დაბლა */
-  left:50%;
-  transform:translateX(-50%);
-  width:80px;         /* ადრე 120px — ვაკლებთ, რომ მეზობელს აღარ შეეხოს */
-  height:80px;        /* ადრე 110px */
-  pointer-events:none;
+/* სადაც შეიკრებიან ბუშტები სახურავზე */
+.anchor {
+  position: absolute;
+  top: -120px;             /* ოდნავ მაღლა სახურავიდან */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 160px;
+  pointer-events: none;
 }
 
-/* თითო მიმაგრებული ბუშტი */
-.anchor .tether{
-  position:absolute;
-  bottom:18px; left:50%;
-  width:2px; height:40px;
-  background:#666;
-  transform-origin:top;
-}
-.anchor .b{
-  position:absolute;
-  width:28px; height:36px;
-  border-radius:50%;
-  box-shadow: inset 0 12px 18px rgba(255,255,255,.7);
+/* ბუშტების კონტეინერი */
+.anchor .cluster {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 140px;
+  height: 150px;
 }
 
-/* ფერები */
+/* თითოეული ბუშტი */
+.anchor .cluster .b {
+  position: absolute;
+  width: 26px;
+  height: 34px;
+  border-radius: 50%;
+  box-shadow: inset 0 10px 16px rgba(255,255,255,.7);
+}
+
+/* ძაფი თითოეული ბუშტისთვის */
+.anchor .cluster .tether {
+  position: absolute;
+  width: 2px;
+  height: 30px;
+  background: #555;
+}
+
+/* ფერები (შენი არსებულები 그대로 შეიძლება დატოვო) */
 .b.red   { background:#ff5c5c; }
 .b.green { background:#5cd65c; }
 .b.blue  { background:#4a90e2; }
+.b.yellow{ background:#ffd54f; }
 
-/* მსუბუქი რხევა მხოლოდ მიმაგრებულებზე */
-.anchor.sway { animation:sway 1.6s ease-in-out infinite; }
-@keyframes sway { 0%,100%{ transform:translateX(-50%) rotate(-2deg);} 50%{ transform:translateX(-50%) rotate(2deg);} }
+/* მსუბუქი რხევა მთელი ჯგუფისთვის */
+.anchor.sway {
+  animation: sway 1.8s ease-in-out infinite;
+}
+@keyframes sway {
+  0%,100% { transform: translateX(-50%) rotate(-2deg); }
+  50%     { transform: translateX(-50%) rotate( 2deg); }
+}
 
 /* სახლის გაფრენა */
 .house.fly { animation:flyUp 1.4s ease-in forwards; }
@@ -613,5 +632,15 @@ body {
 .house.bonus-glow img {
   filter: drop-shadow(0 0 20px rgba(255, 255, 0, 0.9));
   transform: translateY(-4px) scale(1.03);
+  transition: 0.2s ease;
+}
+.house.bonus-glow img {
+  filter: drop-shadow(0 0 16px rgba(255, 235, 59, 0.9));
+  transform: translateY(-4px) scale(1.03);
+  transition: 0.2s ease;
+}
+.house-bonus img {
+  transform: translateY(-6px) scale(1.04);
+  filter: drop-shadow(0 0 18px rgba(255, 215, 0, 0.9));
   transition: 0.2s ease;
 }
