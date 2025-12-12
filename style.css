@@ -7,6 +7,10 @@ html, body {
 body {
   background: url(./image/image.png) no-repeat center center / cover;
 }
+/* მეორე თემა – Double Color Mode */
+body.theme-advanced {
+  background: url(./image/backgraundtwo.png) no-repeat center center / cover;
+}
 
 /* ზედა სათამაშო სივრცე */
 #gameArea {

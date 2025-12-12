@@ -45,6 +45,7 @@ const gameArea = document.getElementById('gameArea');
 let   houses   = [...document.querySelectorAll('.house')];
 const scoreEl  = document.getElementById('score');
 
+
 // ქულების ცვლადი უკვე ზემოთ გაქვს let score = 0; (არ გააორმაგო)
 
 let hasYellowHouse     = false;
@@ -70,32 +71,26 @@ setInterval(() => {
 function spawnBalloon() {
   let availableColors = COLORS;
 
-  // თუ double color რეჟიმი ჩართულია – ავიღოთ ორი ფერი
-  if (hasDoublePalette && COLORS.length >= 2) {
-    availableColors = COLORS.slice(0, 2);
+  // თუ Double Color Mode ჩართულია –ბუშტები მხოლოდ ორ ფერში მოდის
+  if (hasDoublePalette) {
+    // ორი ფერი – შეგიძლია შეცვალო, напр. ['red','blue'] თუ გინდა
+    availableColors = ['red', 'yellow'];
   }
 
-  // ავირჩიოთ ბუშტის ფერი
   const color = availableColors[Math.floor(Math.random() * availableColors.length)];
 
-  // შევქმნათ ბუშტი
   const b = document.createElement('div');
   b.className = `balloon ${color}`;
   b.dataset.color = color;
 
-  // საწყისი X პოზიცია
   const r = gameArea.getBoundingClientRect();
   const startX = Math.random() * (r.width - 60);
   b.style.left = `${startX}px`;
   b.style.top  = `-100px`;
 
-  // დავამატოთ სათამაშო ველს
   gameArea.appendChild(b);
 
-  // მხოლოდ ჰორიზონტალური გადათრევა
   enableDragX(b);
-
-  // დავიწყოთ ვარდნა
   fall(b);
 }
 
@@ -387,10 +382,26 @@ function applyUpgrade(name) {
     maxBalloonsPerHouse = 10;  // ახლა უკვე 10 ბუშტი ერთ სახლზე
   }
 
-  if (name === "double_palette" && !hasDoublePalette) {
-    hasDoublePalette = true;
-    // მერე ვიზუალურად სახურავებსაც გავაფერადებთ საჭიროებისამებრ
+if (name === "double_palette" && !hasDoublePalette) {
+  hasDoublePalette = true;
+
+  // 1) ფონის შეცვლა – Theme 2
+  document.body.classList.add('theme-advanced');
+
+  // 2) სამივე სახლის სურათის შეცვლა ორ-ფერი ვერსიებზე
+  const redImg   = document.querySelector('#house-red img');
+  const blueImg  = document.querySelector('#house-blue img');
+  const greenImg = document.querySelector('#house-green img');
+
+  if (redImg)   redImg.src   = './image/blueh-double.png';
+  if (blueImg)  blueImg.src  = './image/blueh-double.png';
+  if (greenImg) greenImg.src = './image/greenh-double.png';
+
+  // 3) დამატებითი ფერი – yellow (თუ ჯერ არაა, დავამატოთ)
+  if (!COLORS.includes('yellow')) {
+    COLORS.push('yellow');
   }
+}
 }
 // HOUSE SCREEN LOGIC
 
