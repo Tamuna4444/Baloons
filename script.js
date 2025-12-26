@@ -12,43 +12,39 @@ let gameStarted = false;
 startBtn.addEventListener('click', () => {
   mainMenu.classList.add('hidden');
   gameStarted = true;
+    setInterval(spawnTestBalloonPair, 1200);
 });
 // ეკრანები
 const mainScreen = document.getElementById('mainScreen');
-const shopScreen = document.getElementById('shopScreen');
-
-// ღილაკები
-const btnShop = document.getElementById('btnShop');
-const btnHouse = document.getElementById('btnHouse');
-const btnSettings = document.getElementById('btnSettings');
-const btnBackFromShop = document.getElementById('btnBackFromShop');
 
 
-const shopPointsEl = document.getElementById('shopPoints');
-
-// ქულების ცვლადი
-let score = 0;
-
-// --- Shop გახსნა ---
-btnShop.addEventListener('click', () => {
-  shopPointsEl.textContent = score;
-  mainScreen.classList.add('hidden');
-  shopScreen.classList.remove('hidden');
-});
-
-// --- Shop Back (დაბრუნება თამაშზე) ---
-btnBackFromShop.addEventListener('click', () => {
-  shopScreen.classList.add('hidden');
-  mainScreen.classList.remove('hidden');
-});
 const gameArea = document.getElementById('gameArea');
 let   houses   = [...document.querySelectorAll('.house')];
 const scoreEl  = document.getElementById('score');
+let score = 0;
+let hasYellowHouse = false;
+
+function unlockYellowHouse() {
+  const yellowHouse = document.getElementById('house-yellow');
+  if (!yellowHouse) return;
+
+  yellowHouse.classList.remove('hidden');
+}
+
+
+function updateScoreUI() {
+  scoreEl.textContent = 'Score: ' + score;
+
+  if (!hasYellowHouse && score >= 100) {
+    hasYellowHouse = true;
+    unlockYellowHouse();
+  }
+}
 
 
 // ქულების ცვლადი უკვე ზემოთ გაქვს let score = 0; (არ გააორმაგო)
 
-let hasYellowHouse     = false;
+
 let hasSpeedUpgrade    = false;
 let hasDoublePalette   = false;
 
@@ -60,38 +56,48 @@ let COLORS = houses.map(h => (h.dataset.color || '').trim().toLowerCase());
 
 
 
-
+const BOMB_CHANCE    = 0.25; // 25% ბომბი
+const BOMB_PENALTY   = 2;    // ბომბზე -2 ქულა
+const BALLOON_POINTS = 5;    // სწორ ბუშტზე +5 ქულა
 
 // --- SPAWN BALLOONS ---
 setInterval(() => {
   if (!gameStarted) return;
-  spawnBalloon();
+  spawnItem();
 }, 1400);
 
-function spawnBalloon() {
+function spawnItem() {
+  // ფერები იგივე ლოგიკით
   let availableColors = COLORS;
-
-  // თუ Double Color Mode ჩართულია –ბუშტები მხოლოდ ორ ფერში მოდის
   if (hasDoublePalette) {
-    // ორი ფერი – შეგიძლია შეცვალო, напр. ['red','blue'] თუ გინდა
     availableColors = ['red', 'yellow'];
   }
 
   const color = availableColors[Math.floor(Math.random() * availableColors.length)];
 
-  const b = document.createElement('div');
-  b.className = `balloon ${color}`;
-  b.dataset.color = color;
+  // გადაწყვიტე: ბუშტი თუ ბომბი
+  const isBomb = Math.random() < BOMB_CHANCE;
+
+  const el = document.createElement('div');
+  el.dataset.color = color;
+
+  if (isBomb) {
+    el.className = `bomb ${color}`;
+    el.dataset.type = "bomb";
+  } else {
+    el.className = `balloon ${color}`;
+    el.dataset.type = "balloon";
+  }
 
   const r = gameArea.getBoundingClientRect();
   const startX = Math.random() * (r.width - 60);
-  b.style.left = `${startX}px`;
-  b.style.top  = `-100px`;
+  el.style.left = `${startX}px`;
+  el.style.top  = `-100px`;
 
-  gameArea.appendChild(b);
+  gameArea.appendChild(el);
 
-  enableDragX(b);
-  fall(b);
+  enableDragX(el);
+  fall(el);
 }
 
 // --- BALLOON FALL ---
@@ -157,7 +163,25 @@ function tryAttach(balloon) {
   if (!targetHouse) return false;
 
   const houseColor = (targetHouse.dataset.color || '').trim().toLowerCase();
+  const type = (balloon.dataset.type || "balloon");
 
+  // 💣 ბომბი: სახლს თუ მოხვდა → -2, არ ვამაგრებთ სახურავზე
+  if (type === "bomb") {
+    const prev = score;
+    score = Math.max(0, score - BOMB_PENALTY);
+   updateScoreUI();
+
+    // streak წყდება
+    streakHouseId = null;
+    streakCount   = 0;
+
+    // თუ ქულა დაკლებით 0-მდე ჩამოვიდა → Game Over
+    if (prev > 0 && score === 0) {
+      gameOver();
+    }
+
+    return true; // დამუშავდა (fall() მოაშორებს ელემენტს)
+  }
   if (houseColor === color) {
     // ✅ სწორ სახლზე მიამაგრა
     attachToRoof(targetHouse, color);
@@ -165,7 +189,7 @@ function tryAttach(balloon) {
     // --- ქულები (ძირითადი + streak ლოგიკა) ---
 
     // ჩვეულებრივი ქულა თითო ბუშტზე
-    score += 1;
+   score += BALLOON_POINTS; // +5
 
     // streak – ზედიზედ 5 ბუშტი ერთ სახლზე
     const id = targetHouse.id;
@@ -186,7 +210,7 @@ function tryAttach(balloon) {
       setTimeout(() => targetHouse.classList.remove('house-bonus'), 400);
     }
 
-    scoreEl.textContent = 'Score: ' + score;
+   updateScoreUI();
 
     // რამდენი ბუშტი აქვს უკვე ამ სახლს
     const has  = +targetHouse.dataset.has || 0;
@@ -341,69 +365,7 @@ function enableDragX(el) {
   });
 }
 
-// ========================
-//      SHOP SYSTEM
-// ========================
-const shopItems = document.querySelectorAll('.shop-item');
 
-shopItems.forEach(item => {
-  const btn = item.querySelector('.buy-btn');
-  const cost = +item.dataset.cost;
-
-  btn.addEventListener('click', () => {
-    if (item.classList.contains("owned")) return;
-
-    if (score < cost) {
-      alert("Not enough points!");
-      return;
-    }
-
-    score -= cost;
-    scoreEl.textContent = "Score: " + score;
-    shopPointsEl.textContent = score;
-
-    item.classList.add("owned");
-    btn.textContent = "Bought";
-    btn.disabled = true;
-
-    applyUpgrade(item.dataset.upgrade);
-  });
-});
-
-function applyUpgrade(name) {
-  if (name === "yellow_house" && !hasYellowHouse) {
-    hasYellowHouse = true;
-    unlockYellowHouse();
-  }
-
-  if (name === "speed1" && !hasSpeedUpgrade) {
-    hasSpeedUpgrade = true;
-    fallSpeedMultiplier = 1.4; // ოდნავ უფრო სწრაფი
-    maxBalloonsPerHouse = 10;  // ახლა უკვე 10 ბუშტი ერთ სახლზე
-  }
-
-if (name === "double_palette" && !hasDoublePalette) {
-  hasDoublePalette = true;
-
-  // 1) ფონის შეცვლა – Theme 2
-  document.body.classList.add('theme-advanced');
-
-  // 2) სამივე სახლის სურათის შეცვლა ორ-ფერი ვერსიებზე
-  const redImg   = document.querySelector('#house-red img');
-  const blueImg  = document.querySelector('#house-blue img');
-  const greenImg = document.querySelector('#house-green img');
-
-  if (redImg)   redImg.src   = './image/blueh-double.png';
-  if (blueImg)  blueImg.src  = './image/blueh-double.png';
-  if (greenImg) greenImg.src = './image/greenh-double.png';
-
-  // 3) დამატებითი ფერი – yellow (თუ ჯერ არაა, დავამატოთ)
-  if (!COLORS.includes('yellow')) {
-    COLORS.push('yellow');
-  }
-}
-}
-// HOUSE SCREEN LOGIC
 
 
 const houseScreen   = document.getElementById('houseScreen');
@@ -440,4 +402,61 @@ function unlockYellowHouse() {
   // ახალი სახლი გამოიყენოს თამაშმაც
   houses.push(h);
   COLORS.push('yellow');
+}
+function gameOver() {
+  gameStarted = false;
+
+  // ეკრანზე დავაბრუნოთ მთავარი მენიუ
+  mainMenu.classList.remove('hidden');
+
+  // გაწმინდოს მიმდინარე ვარდნადი ობიექტები
+  gameArea.querySelectorAll('.balloon, .bomb').forEach(el => el.remove());
+
+  // სურვილისამებრ შეტყობინება
+  alert("Game Over!");
+}
+function explodeBomb(bomb) {
+  bomb.classList.add('explode');
+
+  setTimeout(() => {
+    bomb.remove();
+  }, 400);
+}
+const balloonImages = [
+  "./image/balloon-green-yellow.png",
+  "./image/balloon-orange-blue.png",
+  "./image/purplegre.png",
+  "./image/purpleyellow.png"
+];
+
+function spawnTestBalloonPair() {
+  const img = document.createElement("img");
+
+  // შემთხვევით აირჩევს ერთ-ერთს
+  img.src = balloonImages[Math.floor(Math.random() * balloonImages.length)];
+  img.className = "balloon-pair";
+
+  img.style.left = Math.random() * (gameArea.clientWidth - 70) + "px";
+  img.style.top = "-120px";
+
+  gameArea.appendChild(img);
+
+  let y = -120;
+  const speed = 2.3;
+
+  const timer = setInterval(() => {
+    y += speed;
+    img.style.top = y + "px";
+
+    if (y > gameArea.clientHeight + 150) {
+      clearInterval(timer);
+      img.remove();
+    }
+  }, 16);
+
+  // ტესტისთვის — კლიკზე გაქრეს
+  img.addEventListener("click", () => {
+    clearInterval(timer);
+    img.remove();
+  });
 }

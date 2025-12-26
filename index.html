@@ -16,10 +16,7 @@
 </div>
   <!-- მთავარი ეკრანი/თამაში -->
   <div id="mainScreen">
-    <!-- ღილაკები ზედა მარჯვნივ -->
- <div class="top-right-buttons">
-  <button id="btnShop" class="btn-small">Shop</button>
- 
+<div class="top-right-buttons">
   <button id="btnSettings" class="btn-circle">⚙</button>
 </div>
 
@@ -40,70 +37,16 @@
         <img src="./image/greenh.png" alt="Green House" />
         <div class="anchor"></div>
       </div>
+      <div id="house-yellow" class="house hidden" data-color="yellow" data-need="5" data-has="0">
+  <img src="./image/yellowh.png" alt="Yellow House" />
+  <div class="anchor"></div>
+</div>
     </div>
 
     <div id="score">Score: 0</div>
   </div>
 
-  <!-- SHOP ეკრანი (ცალკე screen) -->
-  <div id="shopScreen" class="hidden">
-    <div class="shop-page">
-      <div class="shop-header">
-        <button id="btnBackFromShop" class="btn-small">← Back</button>
-        <div class="shop-points-big">
-          Your points: <span id="shopPoints">0</span>
-        </div>
-      </div>
 
-      <h2>Game Shop</h2>
-
-<div class="shop-grid">
-  <!-- 20 ქულა – ყვითელი სახლი + ყვითელი ბუშტები -->
-  <div class="shop-item" data-cost="20" data-upgrade="yellow_house">
-    <div class="shop-preview preview-yellow-house"></div>
-    <div class="shop-info">
-      <h3>Yellow House</h3>
-      <p>Unlock one more house with a yellow roof and yellow balloons.</p>
-      <div class="shop-meta">
-        <span class="price">20 pts</span>
-        <button class="buy-btn">Buy</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 40 ქულა – სიჩქარე + 10 ბუშტი ერთ სახლზე -->
-  <div class="shop-item" data-cost="40" data-upgrade="speed1">
-    <div class="shop-preview preview-speed"></div>
-    <div class="shop-info">
-      <h3>Faster Balloons</h3>
-      <p>Balloons fall faster and each house can hold up to 10 balloons.</p>
-      <div class="shop-meta">
-        <span class="price">40 pts</span>
-        <button class="buy-btn">Buy</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 50 ქულა – ორი ფერის რეჟიმი -->
-  <div class="shop-item" data-cost="50" data-upgrade="double_palette">
-    <div class="shop-preview preview-double"></div>
-    <div class="shop-info">
-      <h3>Double Color Mode</h3>
-      <p>Houses and balloons use a double-color palette.</p>
-      <div class="shop-meta">
-        <span class="price">50 pts</span>
-        <button class="buy-btn">Buy</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-        </div>
-      </div>
-
-    </div>
-  </div>
   <!-- HOUSE BUILDING SCREEN -->
 <div id="houseScreen" class="panel hidden">
   <div class="house-box">
