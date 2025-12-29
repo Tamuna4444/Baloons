@@ -1,4 +1,10 @@
-const HOUSE_NEED = 15;       // 15 ბუშტზე აფრინდეს სახლი
+const HOUSE_SKINS = {
+  red:   ["./image/redh.png",   "./image/purpleyellow2.png"],
+  blue:  ["./image/blueh.png",  "./image/bluehdouble.png"],
+  green: ["./image/greenh.png", "./image/greeyellow3.png"],
+  yellow:["./image/yellowh.png","./image/yellowhdouble.png"]
+};
+const HOUSE_NEED = 5;       // 15 ბუშტზე აფრინდეს სახლი
 
 // streak ლოგიკა – ზედიზედ 5 ბუშტზე ერთ სახლზე
 let streakHouseId = null;
@@ -62,9 +68,11 @@ const BALLOON_POINTS = 5;    // სწორ ბუშტზე +5 ქულა
 
 // --- SPAWN BALLOONS ---
 setInterval(() => {
+  
   if (!gameStarted) return;
   spawnItem();
 }, 1400);
+
 
 function spawnItem() {
   // ფერები იგივე ლოგიკით
@@ -310,27 +318,24 @@ function flyHouse(h) {
   // აფრენის ანიმაცია
   h.classList.add('fly');
 
-  setTimeout(() => {
-    // 1) დავასუფთაოთ ბუშტები სახლზე
-    const anchor = h.querySelector('.anchor');
-    if (anchor) {
-      anchor.innerHTML = '';        // ვშლით cluster-ს/ბუშტებს
-      anchor.classList.remove('sway');
-    }
+setTimeout(() => {
+  // ბუშტების გასუფთავება
+  const anchor = h.querySelector('.anchor');
+  if (anchor) {
+    anchor.innerHTML = '';
+    anchor.classList.remove('sway');
+  }
 
-    // 2) ბუშტების რაოდენობა განულდეს
-    h.dataset.has = '0';
+  h.dataset.has = '0';
 
-    // 3) თუ streak ამ სახლზე იყო, ისიც განულდეს
-    if (typeof streakHouseId !== 'undefined' && streakHouseId === h.id) {
-      streakHouseId = null;
-      streakCount   = 0;
-    }
+ 
+  // 🔁 სახლის შეცვლა
+changeHouseSkin(h);
 
-    // 4) house.fly კლასი მოვხსნათ, რომ ისევ „ქვემოთ დაბრუნდეს“
-    h.classList.remove('fly');
-    // (CSS ანიმაცია დასრულდება, transform მოიხსნება და სახლი ისევ ქუჩაზე დადგება)
-  }, 1500); // ოდნავ მეტი, ვიდრე შენი flyUp animation-ის ხანგრძლივობა
+  // დაბრუნება ქუჩაზე
+  h.classList.remove('fly');
+
+}, 1500);
 }
 
 // --- DRAG BALLOON ---
@@ -459,4 +464,23 @@ function spawnTestBalloonPair() {
     clearInterval(timer);
     img.remove();
   });
+}
+function changeHouseSkin(house) {
+  const color = (house.dataset.color || "").trim().toLowerCase();
+  const img = house.querySelector("img");
+  const skins = HOUSE_SKINS[color];
+
+  if (!img || !skins || skins.length === 0) return;
+
+  // აირჩიოს ახალი, რომელიც არ არის იგივე
+  const current = img.getAttribute("src") || "";
+  let next = skins[Math.floor(Math.random() * skins.length)];
+
+  if (skins.length > 1) {
+    while (next === current) {
+      next = skins[Math.floor(Math.random() * skins.length)];
+    }
+  }
+
+  img.src = next;
 }
