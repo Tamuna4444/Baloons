@@ -1,3 +1,4 @@
+
 /* ფონად შენი სურათი */
 html, body {
   height: 100%;
@@ -29,39 +30,18 @@ body.theme-advanced {
   gap: 80px;
   z-index: 6;
 }
-.house { width: 180px; }
-.house img {
-  width: 100%;
-  height: auto;
-  user-select: none;
-  pointer-events: none; /* ბუშტს ხელი არ შეუშალოს */
-  filter: drop-shadow(0 5px 10px rgba(0,0,0,.4));
-  transition: transform .25s ease;
-}
+
 .house.glow img {
   transform: translateY(-10px) scale(1.05);
   filter: drop-shadow(0 0 24px rgba(255, 255, 255, .9));
 }
+:root{
+  --BALLOON_SIZE: 90px;        /* ვარდნადი ბუშტი */
+  --BALLOON_ATTACH_SIZE: 40px; /* დამაგრებული ბუშტი (სახურავზე) */
+}
 
-/* ბუშტები (უშუალოდ JS ამოძრავებს) */
-.balloon {
-  position: absolute;
-  top: -100px;
-  width: 60px; height: 80px;
-  border-radius: 50%;
-  box-shadow: inset 0 12px 20px rgba(255,255,255,.6);
-  z-index: 10;
-}
-.balloon::after {
-  content: "";
-  position: absolute;
-  bottom: -28px; left: 50%;
-  width: 2px; height: 28px;
-  background: #555; transform: translateX(-50%);
-}
-.balloon.red   { background: #ff5c5c; }
-.balloon.green { background: #5cd65c; }
-.balloon.blue  { background: #4a90e2; }
+
+
 /* 💣 Bomb (colorful) */
 .bomb{
   position:absolute;
@@ -112,34 +92,7 @@ body.theme-advanced {
   background: #ffffffb0; backdrop-filter: blur(4px);
   font-weight: 700;
 }
-.balloon {
-  cursor: grab;
-}
 
-.balloon.dragging {
-  cursor: grabbing;
-}
-/* მცირე ბუშტების კალათა სახურავზე */
-.house { position: relative; }
-.stack {
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 6px;
-}
-.stack .mini {
-  width: 16px; height: 16px;
-  border-radius: 50%;
-  border: 1px solid rgba(0,0,0,.2);
-  box-shadow: 0 1px 2px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.8);
-}
-
-/* ფერები პატარა წერტილებისთვის */
-.mini.red   { background: #ff5c5c; }
-.mini.green { background: #5cd65c; }
-.mini.blue  { background: #4a90e2; }
 
 /* გაფრენის ეფექტი სახლზე */
 .house.fly { animation: flyUp 1.2s ease-in forwards; }
@@ -152,48 +105,16 @@ body.theme-advanced {
 .house { position: relative; }
 /* 좁ე და დაბლა ჩამოწეული ჰიტბოქსი */
 /* სადაც შეიკრებიან ბუშტები სახურავზე */
-.anchor {
+.anchor{
   position: absolute;
-  top: -120px;             /* ოდნავ მაღლა სახურავიდან */
   left: 50%;
+  top: 28px;
   transform: translateX(-50%);
-  width: 140px;
-  height: 160px;
+  width: 140px;     /* ✅ იყო 1px */
+  height: 90px;     /* ✅ იყო 1px */
   pointer-events: none;
 }
 
-/* ბუშტების კონტეინერი */
-.anchor .cluster {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 140px;
-  height: 150px;
-}
-
-/* თითოეული ბუშტი */
-.anchor .cluster .b {
-  position: absolute;
-  width: 26px;
-  height: 34px;
-  border-radius: 50%;
-  box-shadow: inset 0 10px 16px rgba(255,255,255,.7);
-}
-
-/* ძაფი თითოეული ბუშტისთვის */
-.anchor .cluster .tether {
-  position: absolute;
-  width: 2px;
-  height: 30px;
-  background: #555;
-}
-
-/* ფერები (შენი არსებულები 그대로 შეიძლება დატოვო) */
-.b.red   { background:#ff5c5c; }
-.b.green { background:#5cd65c; }
-.b.blue  { background:#4a90e2; }
-.b.yellow{ background:#ffd54f; }
 
 /* მსუბუქი რხევა მთელი ჯგუფისთვის */
 .anchor.sway {
@@ -211,11 +132,6 @@ body.theme-advanced {
   60%{ transform:translateY(-55vh) scale(1.03); }
   100%{ transform:translateY(-110vh) scale(1.03); opacity:0; }
 }
-
-/* მცირე UX */
-.balloon{ cursor:grab; }
-.balloon.dragging{ cursor:grabbing; }
-
 
 
 /* მთავარი ეკრანი */
@@ -240,25 +156,6 @@ body.theme-advanced {
   );
 }
 
-/* შიგთავსი */
-.menu-inner {
-  position: relative;
-  z-index: 1;
-  text-align: center;
-  padding: 24px 28px;
-  border-radius: 24px;
-  background: rgba(255,255,255,0.15);
-  backdrop-filter: blur(6px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-}
-
-.menu-title {
-  font-size: 32px;
-  color: #fff7e8;
-  text-shadow: 0 3px 8px rgba(0,0,0,0.7);
-  margin-bottom: 18px;
-}
-
 /* დიდი Start ღილაკი */
 .btn-main {
   display: inline-block;
@@ -274,26 +171,6 @@ body.theme-advanced {
   margin-bottom: 16px;
 }
 
-/* ქვედა ღილაკები */
-.menu-buttons-row {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-
-/* Shop – ოვალური ღილაკი */
-.btn-small {
-  padding: 10px 20px;
-  border-radius: 18px;
-  border: none;
-  background: #ffe082;
-  color: #6d4c00;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-}
-
 /* პატარა მრგვალი ღილაკები (Map, Settings) */
 .btn-circle {
   width: 44px;
@@ -306,257 +183,6 @@ body.theme-advanced {
   box-shadow: 0 4px 10px rgba(0,0,0,0.3);
 }
 
-/* პატარა ჰოვერი – ლაივი რომ იყოს */
-.btn-main:hover,
-.btn-small:hover,
-.btn-circle:hover {
-  transform: translateY(-2px);
-}
-/* === GOLDEN SHOP BUTTON === */
-.btn-shop {
-  padding: 10px 22px;
-  font-size: 16px;
-  font-weight: 600;
-  border-radius: 20px;
-  border: none;
-  cursor: pointer;
-  background: linear-gradient(180deg, #ffe8a3, #f5c254);
-  color: #6b4a00;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25), 
-              inset 0 2px 4px rgba(255,255,255,0.8);
-  transition: 0.15s ease;
-}
-
-.btn-shop:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0,0,0,0.4);
-}
-
-.btn-shop:active {
-  transform: translateY(1px);
-}
-
-/* === ROUND ICON BUTTONS (Map, Settings) === */
-.btn-round {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  border: none;
-  cursor: pointer;
-  background: linear-gradient(180deg, #ffffff, #e5e5e5);
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2), 
-              inset 0 2px 3px rgba(255,255,255,0.8);
-  font-size: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: 0.15s ease;
-}
-
-.btn-round:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 14px rgba(0,0,0,0.35);
-}
-
-.btn-round:active {
-  transform: translateY(1px);
-}
-.hidden {
-  display: none;
-}
-
-/* Overlay ფონი */
-.panel {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 50;
-}
-
-/* შიდა ფანჯარა */
-.panel-inner {
-  background: #fdfdfd;
-  padding: 20px 18px;
-  border-radius: 18px;
-  width: 90%;
-  max-width: 380px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
-  font-size: 14px;
-}
-
-/* Shop-ის შიგთავსი */
-.shop-points {
-  margin-bottom: 10px;
-  font-weight: 600;
-}
-
-.shop-items {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 14px;
-}
-
-.shop-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
-  padding: 8px 10px;
-  border-radius: 10px;
-  background: #ffffff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.shop-item .price {
-  font-weight: 700;
-  font-size: 13px;
-}
-
-.shop-item.owned {
-  opacity: 0.6;
-}
-
-.shop-item .buy-btn {
-  padding: 6px 10px;
-  font-size: 13px;
-  border-radius: 999px;
-  border: none;
-  cursor: pointer;
-  background: #4caf50;
-  color: #fff;
-}
-
-/* Close ღილაკი */
-.btn-shop-close {
-  width: 100%;
-  margin-top: 6px;
-  padding: 8px 0;
-  border-radius: 999px;
-  border: none;
-  cursor: pointer;
-  background: #e0e0e0;
-}
-/* ღილაკები ზედა მარჯვენა კუთხეში */
-.top-right-buttons {
-  position: absolute;   /* ან თუ გინდა, შეიძლება fixed-იც */
-  top: 20px;
-  right: 20px;
-  display: flex;
-  gap: 10px;
-  z-index: 10;
-}
-.hidden {
-  display: none;
-}
-
-/* Shop მთელი ეკრანი */
-#shopScreen {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.15); /* სურვილისამებრ – შეგიძლია იგივე ფონი, რაც main-ს აქვს */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 50;
-}
-
-/* შიგა Shop კონტეინერი */
-.shop-page {
-  width: 90%;
-  max-width: 420px;
-  background: #fdfdfd;
-  border-radius: 24px;
-  padding: 18px 18px 20px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-}
-
-/* Header: Back + points */
-.shop-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 8px;
-}
-
-.shop-points-big {
-  font-weight: 600;
-}
-
-/* Shop grid – იგივე, რაც ადრე გავაკეთეთ */
-.shop-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-/* დარჩენილი shop-item, shop-preview, shop-info, shop-meta სტილები როგორც უკვე გაქვს */
-/* ახალი Shop განლაგება */
-.shop-panel h2 {
-  margin-top: 0;
-  margin-bottom: 6px;
-}
-
-.shop-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin: 10px 0 16px;
-}
-
-.shop-item {
-  display: flex;
-  gap: 10px;
-  align-items: stretch;
-  padding: 8px 10px;
-  border-radius: 14px;
-  background: #ffffff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-.shop-preview {
-  width: 64px;
-  border-radius: 12px;
-  background: #f3f3f3;
-  box-shadow: inset 0 1px 2px rgba(255,255,255,0.7);
-  position: relative;
-}
-
-
-
-
-
-
-
-
-/* ტექსტის ნაწილი */
-.shop-info h3 {
-  margin: 2px 0 4px;
-  font-size: 15px;
-}
-.shop-info p {
-  margin: 0;
-  font-size: 12px;
-  color: #555;
-}
-
-/* ფასი + ღილაკი ერთ ხაზზე */
-.shop-meta {
-  margin-top: 6px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.shop-item .price {
-  font-weight: 700;
-  font-size: 13px;
-}
-/* --- Upgrades on houses (after buying in shop) --- */
 
 /* Flag on red house roof */
 #house-red.upgrade-flag::before,
@@ -603,11 +229,7 @@ body.theme-advanced {
     linear-gradient(180deg,#4caf50,#2e7d32);
   box-shadow: 0 2px 4px;
 }
-.balloon.yellow { background: #ffd54f; }
-.b.yellow       { background: #ffd54f; }
-#shopScreen.hidden {
-  display: none;
-}
+
 
 #mainScreen.hidden {
   display: none;
@@ -708,11 +330,119 @@ body.theme-advanced {
 .bomb.explode {
   animation: explode 0.4s ease-out forwards;
 }
-.balloon-pair {
+
+/* FALLING two-color balloon (pair) */
+.balloon-pair{
   position: absolute;
-  width: 70px;
+  width: 170px;          /* აი ეს არის მთავარი — რომ rect სწორად დაითვალოს */
+  height: auto;
+  pointer-events: auto;  /* რომ pointerdown დაიჭიროს */
+  user-select: none;
+  touch-action: none;
+  z-index: 6;
+}
+
+.balloon-pair img{
+  width: 100%;
+  height: auto;
+  display: block;        /* რომ div-ს რეალური ზომა ჰქონდეს */
+  pointer-events: none;  /* drag container-ზე, არა img-ზე */
+}
+.house img {
+  width: 190px;     /* აირჩიე შენი ზომა */
+  height: auto;
+  transition: transform 0.35s ease, filter 0.35s ease;
+  transform-origin: bottom center;
+}
+
+.house img.house--big {
+  transform: scale(1.15);
+  filter: drop-shadow(0 12px 25px rgba(0,0,0,0.35));
+}
+/* upgrade-ზე გამოსაჩენი ორი ფერის ბუშტი */
+.pair-on-house{
+  position: absolute;
+  left: 50%;
+  top: -150px;              /* anchor უკვე მაღლაა, ამიტომ ზედმეტად არ ასწიო */
+  transform: translateX(-50%) scale(0.85);
+  width: 50px;             /* ✅ უფრო დიდი */
+  height: auto;
+  z-index: 30;              /* house-ზე მაღლა */
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity .15s ease, transform .25s ease;
+}
+
+/* “გამოჩენა + დამაგრების” ეფექტი */
+.pair-on-house.show{
+  opacity: 1;
+  transform: translateX(-50%) scale(1);
+}
+
+/* მერე ნელა აფრინდეს */
+.pair-on-house.fly{
+  opacity: 0;
+  transform: translateX(-50%) translateY(-120px) scale(1.05);
+  transition: transform 1.1s ease, opacity 1.1s ease;
+}
+
+/* Attached balloons on the house (single) */
+.anchor .bimg{
+  width: 100px;
+  height: auto;
+}
+
+/* Attached balloons on the house (pair) */
+.anchor .b-pair{
+  width: 100px;
+  height: auto;
+}
+.anchor .b-pair,
+.anchor .bimg{
+  position: absolute;
+  height: auto;
+  pointer-events: none;
+  transform: translate(-50%, -100%); /* bottom-center = attach point */
+}
+/* ერთფერიანი ბუშტი — PNG */
+.balloon-img {
+  position: absolute;
+  top: -120px;
+  width: var(--BALLOON_SIZE);        /* მოარგე შენს გემოვნებას */
   height: auto;
   z-index: 12;
-  pointer-events: auto;
-  cursor: pointer;
+  cursor: grab;
 }
+
+.balloon-img img {
+  width: 100%;
+  height: auto;
+  pointer-events: none;
+}
+
+/* dragging */
+.balloon-img.dragging {
+  cursor: grabbing;
+}
+.cluster{
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 240px;
+  height: 140px;      /* baseline-ისთვის ადგილი */
+  overflow: visible;  /* რომ ბუშტები არ მოიჭრას */
+}
+
+.bimg{
+  position: absolute;
+  width: var(--BALLOON_ATTACH_SIZE);
+  height: auto;
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+}
+
+
+
+
+

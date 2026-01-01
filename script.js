@@ -1,10 +1,24 @@
+
 const HOUSE_SKINS = {
-  red:   ["./image/redh.png",   "./image/purpleyellow2.png"],
-  blue:  ["./image/blueh.png",  "./image/bluehdouble.png"],
-  green: ["./image/greenh.png", "./image/greeyellow3.png"],
-  yellow:["./image/yellowh.png","./image/yellowhdouble.png"]
+  red:   ["./image/redh.png",   "./image/bigred.png"],
+  blue:  ["./image/blueh.png",  "./image/bigblue.png"],
+  green: ["./image/greenh.png", "./image/biggreen.png"],
+  yellow:["./image/yellowh.png","./image/bluehdouble.png"] // თუ bigyellow გაქვს
 };
 const HOUSE_NEED = 5;       // 15 ბუშტზე აფრინდეს სახლი
+
+const HOUSE_BALLOON_PAIRS = {
+  green: "./image/blgreenyellow.png",
+  blue: "./image/blblueyellow.png",
+  red: "./image/blredyellow.png",
+  yellow: "./image/blorangeyellow.png"
+};
+const SINGLE_BALLOON_IMAGES = {
+  red:    "./image/redbaloon.png",
+  blue:   "./image/b.png",
+  green:  "./image/greenbaloons.png",
+  yellow: "./image/ybaloons.png"
+};
 
 // streak ლოგიკა – ზედიზედ 5 ბუშტზე ერთ სახლზე
 let streakHouseId = null;
@@ -18,7 +32,7 @@ let gameStarted = false;
 startBtn.addEventListener('click', () => {
   mainMenu.classList.add('hidden');
   gameStarted = true;
-    setInterval(spawnTestBalloonPair, 1200);
+  // setInterval(spawnTestBalloonPair, 1200); // ❌ არ გვჭირდება
 });
 // ეკრანები
 const mainScreen = document.getElementById('mainScreen');
@@ -75,32 +89,56 @@ setInterval(() => {
 
 
 function spawnItem() {
-  // ფერები იგივე ლოგიკით
-  let availableColors = COLORS;
-  if (hasDoublePalette) {
-    availableColors = ['red', 'yellow'];
-  }
+  // upgraded სახლები (რომლებზეც უკვე გვინდა ორფერიანი ბუშტები)
+  const upgradedHouses = houses.filter(h => h.dataset.upgraded === "1");
 
-  const color = availableColors[Math.floor(Math.random() * availableColors.length)];
-
-  // გადაწყვიტე: ბუშტი თუ ბომბი
+  // 25% ბომბი – იგივე დატოვე
   const isBomb = Math.random() < BOMB_CHANCE;
 
+  // შევქმნათ ელემენტი
   const el = document.createElement('div');
-  el.dataset.color = color;
 
+  // 💣 ბომბი – ძველი ლოგიკა
   if (isBomb) {
+    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
     el.className = `bomb ${color}`;
     el.dataset.type = "bomb";
+    el.dataset.color = color;
   } else {
-    el.className = `balloon ${color}`;
-    el.dataset.type = "balloon";
+    // 🎈 თუ უკვე არსებობს upgraded სახლი → 60% შანსი იყოს “pair”
+    const spawnPair = upgradedHouses.length > 0 && Math.random() < 0.6;
+
+    if (spawnPair) {
+      const target = upgradedHouses[Math.floor(Math.random() * upgradedHouses.length)];
+      const color = (target.dataset.color || "").trim().toLowerCase(); // მაგ: green / blue / red
+
+      el.className = "balloon-pair";
+      el.dataset.type = "pair";
+      el.dataset.color = color;
+
+      const img = document.createElement("img");
+      img.src = HOUSE_BALLOON_PAIRS[color];   // blgreenyellow.png და ა.შ.
+      img.draggable = false;
+      el.appendChild(img);
+    } else {
+      // 🟢 ჩვეულებრივი ერთფერიანი ბუშტი
+      const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+      el.className = "balloon-img";
+      el.dataset.type = "balloon";
+      el.dataset.color = color;
+      const img = document.createElement("img");
+img.src = SINGLE_BALLOON_IMAGES[color];
+img.draggable = false;
+
+el.appendChild(img);
+    }
   }
 
+  // პოზიცია ზემოდან
   const r = gameArea.getBoundingClientRect();
-  const startX = Math.random() * (r.width - 60);
+  const startX = Math.random() * (r.width - 80);
   el.style.left = `${startX}px`;
-  el.style.top  = `-100px`;
+  el.style.top  = `-140px`;
 
   gameArea.appendChild(el);
 
@@ -190,11 +228,17 @@ function tryAttach(balloon) {
 
     return true; // დამუშავდა (fall() მოაშორებს ელემენტს)
   }
-  if (houseColor === color) {
-    // ✅ სწორ სახლზე მიამაგრა
-    attachToRoof(targetHouse, color);
+if (type === "pair") {
+  // ✅ გამოიყენე უკვე დამუშავებული "color"
+  if (houseColor !== color) return true;
 
-    // --- ქულები (ძირითადი + streak ლოგიკა) ---
+  attachPairToRoof(targetHouse, houseColor);
+  return true;
+}
+if (houseColor === color) {
+  attachToRoof(targetHouse, color);
+  return true;
+
 
     // ჩვეულებრივი ქულა თითო ბუშტზე
    score += BALLOON_POINTS; // +5
@@ -244,14 +288,16 @@ function tryAttach(balloon) {
 }
 function attachToRoof(house, color) {
   // რამდენი ბუშტი ჰქონდა მანამდე ამ სახლს
-  let count = +house.dataset.has || 0;
+  let count = Number(house.dataset.has || 0);
   count++;
-  house.dataset.has = count;
+  house.dataset.has = String(count);
 
   const anchor = house.querySelector('.anchor');
+  if (!anchor) return;
+
   anchor.classList.add('sway');
 
-  // ვიპოვოთ ან შევქმნათ cluster კონტეინერი
+  // cluster
   let cluster = anchor.querySelector('.cluster');
   if (!cluster) {
     cluster = document.createElement('div');
@@ -259,83 +305,127 @@ function attachToRoof(house, color) {
     anchor.appendChild(cluster);
   }
 
-  // შევქმნათ ახალი ბუშტი + მისი ძაფი
-  const balloon = document.createElement('div');
-  balloon.className = `b ${color}`;
+  // ✅ PNG ბუშტი (იმავე ზომით რაც ცვივა)
+  const img = document.createElement("img");
+  img.src = SINGLE_BALLOON_IMAGES[color];   // შენი ობიექტი (red/blue/green/yellow)
+  img.className = "bimg";
+  img.alt = color;
+  img.draggable = false;
 
-  const tether = document.createElement('div');
-  tether.className = 'tether';
+  cluster.appendChild(img);
 
-  cluster.appendChild(tether);
-  cluster.appendChild(balloon);
-
-  // --- განლაგება — "Up" სტილის ღრუბელი ---
-
-  const balloons = cluster.querySelectorAll('.b');
+  // --- განლაგება (ერთნაირად ყველა ბუშტისთვის) ---
+  const balloons = [...cluster.querySelectorAll('.bimg')];
   const total = balloons.length;
 
-  // რამდენი სვეტი გვინდა (maxCols იქ ცოტათი მართავს სიგანეს)
-  const maxCols = 6;
+  const maxCols = 4;
   const cols = Math.min(maxCols, Math.ceil(Math.sqrt(total * 1.4)));
-  const rows = Math.ceil(total / cols);
+  const spacingX = 34;
+  const spacingY = 26;
 
-  const spacingX = 20;  // ჰორიზონტალური დაშორება
-  const spacingY = 18;  // ვერტიკალური დაშორება
-
-  // თავიდან დავალაგოთ ყველა ბუშტი, რომ ლამაზი ფორმა გამოდგეს
   balloons.forEach((b, index) => {
-    const t = cluster.querySelectorAll('.tether')[index];
-
     const row = Math.floor(index / cols);
     const col = index % cols;
 
-    // ცენტრში გასწორება
     const offsetX = (col - (cols - 1) / 2) * spacingX;
     const offsetY = -(row * spacingY);
 
-    // ოდნავ random, რომ "ცოცხალი" იყოს
-    const randX = (Math.random() * 8) - 4;   // -4..+4px
-    const randY = (Math.random() * 6) - 3;   // -3..+3px
-
-    const x = offsetX + randX;
-    const y = offsetY + randY;
-
-    b.style.left = `${70 + x - 13}px`; // 70px = დაახლოებით შუა წერტილი cluster-ში
-    b.style.top  = `${80 + y - 34}px`; // 80px = cluster ქვევიდან
-
-    // ძაფის პოზიცია ბუშტის ქვეშ
-    t.style.left = `${70 + x}px`;
-    t.style.top  = `${80 + y}px`;
+    b.style.left = `calc(50% + ${offsetX}px)`;
+    b.style.top  = `${70 + offsetY}px`;
   });
+
+  // ✅ აქედან იწყება მთავარი FIX:
+  score += BALLOON_POINTS;     // +5
+  updateScoreUI();
+
+  // ✅ HOUSE_NEED-ზე აფრენა
+  if (count >= HOUSE_NEED) {
+    flyHouse(house);
+  }
 }
+function attachPairToRoof(house, color) {
+  let count = Number(house.dataset.has || 0);
+  count += 2; // pair = 2 ბუშტი
+  house.dataset.has = String(count);
+
+  const anchor = house.querySelector('.anchor');
+  if (!anchor) return;
+
+  anchor.classList.add('sway');
+
+  // ✅ cluster აკლდა — ეს იყო მთავარი ბაგი
+  let cluster = anchor.querySelector('.cluster');
+  if (!cluster) {
+    cluster = document.createElement('div');
+    cluster.className = 'cluster';
+    anchor.appendChild(cluster);
+  }
+
+  const src = HOUSE_BALLOON_PAIRS[color];
+  if (!src) return;
+
+  const img = document.createElement('img');
+  img.src = src;
+  img.className = 'b-pair';
+  img.draggable = false;
+  cluster.appendChild(img);
+
+  // --- განლაგება ყველა pair-ზე ---
+  const pairs = [...cluster.querySelectorAll('.b-pair')];
+  const total = pairs.length;
+
+  const maxCols = 3;
+  const cols = Math.min(maxCols, Math.ceil(Math.sqrt(total * 1.2)));
+  const spacingX = 60;
+  const spacingY = 40;
+
+  pairs.forEach((p, index) => {
+    const row = Math.floor(index / cols);
+    const col = index % cols;
+
+    const offsetX = (col - (cols - 1) / 2) * spacingX;
+    const offsetY = -(row * spacingY);
+
+    p.style.left = `calc(50% + ${offsetX}px)`;
+    p.style.top  = `${60 + offsetY}px`;
+  });
+
+  // ✅ ქულა + UI
+  score += BALLOON_POINTS * 2;
+  updateScoreUI();
+
+  // ✅ HOUSE_NEED-ზე აფრენა
+  if (count >= HOUSE_NEED) {
+    flyHouse(house);
+  }
+}
+
 
 // --- FLY HOUSE ---
 function flyHouse(h) {
-  // 🎁 ბონუს ქულა სახლის გაფრენაზე (შეგიძლია ციფრი შეცვალო)
-  score += 10;
-  scoreEl.textContent = 'Score: ' + score;
-
-  // აფრენის ანიმაცია
-  h.classList.add('fly');
-
-setTimeout(() => {
-  // ბუშტების გასუფთავება
-  const anchor = h.querySelector('.anchor');
-  if (anchor) {
-    anchor.innerHTML = '';
-    anchor.classList.remove('sway');
-  }
-
-  h.dataset.has = '0';
+score += 10;
+updateScoreUI();
 
  
-  // 🔁 სახლის შეცვლა
-changeHouseSkin(h);
 
-  // დაბრუნება ქუჩაზე
-  h.classList.remove('fly');
+  // მერე აფრენა
+  h.classList.add('fly');
 
-}, 1500);
+  setTimeout(() => {
+    const anchor = h.querySelector('.anchor');
+  if (anchor) {
+  anchor.innerHTML = '';
+  anchor.classList.remove('sway');
+  anchor.dataset.pairsPlaced = "0"; // ✅ ეს დაამატე
+}
+
+    h.dataset.has = '0';
+
+    changeHouseSkin(h);
+    // როცა სახლი განახლდება
+   h.dataset.upgraded = "1";
+    h.classList.remove('fly');
+  }, 1500);
 }
 
 // --- DRAG BALLOON ---
@@ -427,12 +517,7 @@ function explodeBomb(bomb) {
     bomb.remove();
   }, 400);
 }
-const balloonImages = [
-  "./image/balloon-green-yellow.png",
-  "./image/balloon-orange-blue.png",
-  "./image/purplegre.png",
-  "./image/purpleyellow.png"
-];
+
 
 function spawnTestBalloonPair() {
   const img = document.createElement("img");
@@ -472,15 +557,45 @@ function changeHouseSkin(house) {
 
   if (!img || !skins || skins.length === 0) return;
 
-  // აირჩიოს ახალი, რომელიც არ არის იგივე
-  const current = img.getAttribute("src") || "";
-  let next = skins[Math.floor(Math.random() * skins.length)];
+  // ამოვიღოთ დიდი კლასი, რომ თავიდან სუფთად დაიწყოს
+  img.classList.remove("house--big");
 
-  if (skins.length > 1) {
-    while (next === current) {
-      next = skins[Math.floor(Math.random() * skins.length)];
-    }
-  }
+  const current = img.getAttribute("src") || "";
+
+  // 🔹 მეორე სურათი = დიდი (upgrade)
+  const next = skins[1] || skins[0];
 
   img.src = next;
+
+  // 🔥 აი ეს აკლდა
+  requestAnimationFrame(() => {
+    img.classList.add("house--big");
+  });
+}
+function spawnHouseBalloonPair(house) {
+  const color = (house.dataset.color || "").trim().toLowerCase();
+  const src = HOUSE_BALLOON_PAIRS[color];
+  if (!src) return;
+
+  const anchor = house.querySelector(".anchor");
+  if (!anchor) return;
+
+  // თუ ძველი ჯერ კიდევ არის — წავშალოთ
+  const old = anchor.querySelector("img.pair-on-house");
+  if (old) old.remove();
+
+  const img = document.createElement("img");
+  img.src = src;
+  img.className = "pair-on-house";
+
+  anchor.appendChild(img);
+
+  // 1) გამოჩნდეს და “დაჯდეს” სახლზე
+  requestAnimationFrame(() => img.classList.add("show"));
+
+  // 2) ცოტა ხანი “დამაგრებულად” იდგეს, მერე აფრინდეს
+  setTimeout(() => img.classList.add("fly"), 600);
+
+  // 3) წაშლა
+  setTimeout(() => img.remove(), 1800);
 }
