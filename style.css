@@ -441,7 +441,23 @@ body.theme-advanced {
   transform: translate(-50%, -100%);
   pointer-events: none;
 }
-
+/* Bomb as image (falling) */
+.bomb-img{
+  position:absolute;
+  top:-120px;
+  width:60px;
+  height:auto;
+  z-index:12;
+  cursor:pointer;
+  user-select:none;
+  touch-action:none;
+}
+.bomb-img img{
+  width:100%;
+  height:auto;
+  display:block;
+  pointer-events:none;
+}
 
 
 

@@ -99,11 +99,28 @@ function spawnItem() {
   const el = document.createElement('div');
 
   // 💣 ბომბი – ძველი ლოგიკა
-  if (isBomb) {
-    const color = COLORS[Math.floor(Math.random() * COLORS.length)];
-    el.className = `bomb ${color}`;
-    el.dataset.type = "bomb";
-    el.dataset.color = color;
+ if (isBomb) {
+  const color = COLORS[Math.floor(Math.random() * COLORS.length)];
+
+  el.className = "bomb-img";
+  el.dataset.type = "bomb";
+  el.dataset.color = color;
+  el.dataset.exploded = "0";
+
+  const img = document.createElement("img");
+  img.src = BOMB_IMAGES[color] || BOMB_IMAGES.blue;
+  img.draggable = false;
+
+  el.appendChild(img);
+
+  // 🔥 კლიკზე / თაჩზე აფეთქება
+  el.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    el.dataset.exploded = "1";
+    explodeBomb(el);
+  }, { passive: false });
   } else {
     // 🎈 თუ უკვე არსებობს upgraded სახლი → 60% შანსი იყოს “pair”
     const spawnPair = upgradedHouses.length > 0 && Math.random() < 0.6;
@@ -161,10 +178,18 @@ function fall(balloon) {
       return;
     }
 
-    if (y > gameArea.getBoundingClientRect().height + 120) {
-      alive = false;
-      balloon.remove();
-      return;
+  if (y > gameArea.getBoundingClientRect().height + 120) {
+
+  // 💣 ბომბი თუ არ აფეთქდა
+  if (balloon.dataset.type === "bomb" && balloon.dataset.exploded !== "1") {
+    score = Math.max(0, score - BOMB_MISS_PENALTY);
+    updateScoreUI();
+  }
+
+  alive = false;
+  balloon.remove();
+  return;
+
     }
 
     requestAnimationFrame(step);
@@ -181,6 +206,10 @@ function tryAttach(balloon) {
   if (balloon.dataset.touched !== "1") {
     return false;
   }
+  // ✅ ბომბი არ უნდა შედიოდეს house-attach ლოგიკაში
+if (balloon.dataset.type === "bomb") {
+  return false;
+}
 
   // ბუშტის ცენტრის კოორდინატები
   const br = balloon.getBoundingClientRect();
@@ -286,6 +315,13 @@ if (houseColor === color) {
   // ნებისმიერ შემთხვევაში ბუშტი დამუშავებულია
   return true;
 }
+const BOMB_IMAGES = {
+  red: "./image/redbomb.png",
+  blue: "./image/bluebomb.png",
+  green: "./image/greenbomb.png",
+  yellow: "./image/greybomb.png"
+};
+const BOMB_MISS_PENALTY = 3;
 function attachToRoof(house, color) {
   // რამდენი ბუშტი ჰქონდა მანამდე ამ სახლს
   let count = Number(house.dataset.has || 0);
