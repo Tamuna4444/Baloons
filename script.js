@@ -108,7 +108,7 @@ function spawnItem() {
   el.dataset.exploded = "0";
 
   const img = document.createElement("img");
-  img.src = BOMB_IMAGES[color] || BOMB_IMAGES.blue;
+ img.src = BOMB_IMAGES[Math.floor(Math.random() * BOMB_IMAGES.length)];
   img.draggable = false;
 
   el.appendChild(img);
@@ -315,12 +315,14 @@ if (houseColor === color) {
   // ნებისმიერ შემთხვევაში ბუშტი დამუშავებულია
   return true;
 }
-const BOMB_IMAGES = {
-  red: "./image/redbomb.png",
-  blue: "./image/bluebomb.png",
-  green: "./image/greenbomb.png",
-  yellow: "./image/greybomb.png"
-};
+const BOMB_IMAGES = [
+  "./image/redbomb.png",
+   "./image/bluebomb.png",
+   "./image/greenbomb.png",
+  "./image/greybomb.png",
+   "./image/blachbomb.png",
+   "./image/redbombred.png"
+];
 const BOMB_MISS_PENALTY = 3;
 function attachToRoof(house, color) {
   // რამდენი ბუშტი ჰქონდა მანამდე ამ სახლს
