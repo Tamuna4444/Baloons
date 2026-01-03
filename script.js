@@ -1,9 +1,9 @@
 
 const HOUSE_SKINS = {
-  red:   ["./image/redh.png",   "./image/bigred.png"],
-  blue:  ["./image/blueh.png",  "./image/bigblue.png"],
-  green: ["./image/greenh.png", "./image/biggreen.png"],
-  yellow:["./image/yellowh.png","./image/bluehdouble.png"] // თუ bigyellow გაქვს
+  red:   ["./image/redh.png",   "./image/bigred.png",  "./image/bigredhouse.png"],
+  blue:  ["./image/blueh.png",  "./image/bigblue.png","./image/bigbluehouse.png"],
+  green: ["./image/greenh.png", "./image/biggreen.png","./image/biggreenhouse.png"],
+  yellow:["./image/yellowh.png","./image/bluehdouble.png", "./image/bigyellowhouse.png"],
 };
 const HOUSE_NEED = 5;       // 15 ბუშტზე აფრინდეს სახლი
 
@@ -590,26 +590,30 @@ function spawnTestBalloonPair() {
 }
 function changeHouseSkin(house) {
   const color = (house.dataset.color || "").trim().toLowerCase();
-  const img = house.querySelector("img");
+  const img   = house.querySelector("img");
   const skins = HOUSE_SKINS[color];
 
-  if (!img || !skins || skins.length === 0) return;
+  if (!img || !skins) return;
 
-  // ამოვიღოთ დიდი კლასი, რომ თავიდან სუფთად დაიწყოს
-  img.classList.remove("house--big");
+  let level = Number(house.dataset.level || 0);
 
-  const current = img.getAttribute("src") || "";
+  if (level < skins.length - 1) {
+    level++;
+    house.dataset.level = String(level);
+    img.src = skins[level];
+  }
 
-  // 🔹 მეორე სურათი = დიდი (upgrade)
-  const next = skins[1] || skins[0];
+  // 🔹 LEVEL CLASS UPDATE
+  house.classList.remove("level-0", "level-1", "level-2");
+  house.classList.add("level-" + level);
 
-  img.src = next;
-
-  // 🔥 აი ეს აკლდა
-  requestAnimationFrame(() => {
+  // 🔹 Final house emphasis
+  if (level === 2) {
     img.classList.add("house--big");
-  });
+  }
 }
+
+
 function spawnHouseBalloonPair(house) {
   const color = (house.dataset.color || "").trim().toLowerCase();
   const src = HOUSE_BALLOON_PAIRS[color];

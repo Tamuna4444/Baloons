@@ -24,7 +24,7 @@ body.theme-advanced {
 /* ქვედა ქუჩა/სახლები */
 .street {
   position: absolute;
-  left: 0; right: 0; bottom: 36px;
+  left: 0; right: 0; bottom: 10px;
   display: flex;
   justify-content: center;
   gap: 80px;
@@ -355,10 +355,7 @@ body.theme-advanced {
   transform-origin: bottom center;
 }
 
-.house img.house--big {
-  transform: scale(1.15);
-  filter: drop-shadow(0 12px 25px rgba(0,0,0,0.35));
-}
+
 /* upgrade-ზე გამოსაჩენი ორი ფერის ბუშტი */
 .pair-on-house{
   position: absolute;
@@ -460,5 +457,16 @@ body.theme-advanced {
 }
 
 
+
+.house-inner{
+  position: relative;
+  transform-origin: bottom center;
+  transition: transform 0.4s ease;
+}
+
+/* ზომა level-ის მიხედვით */
+.house.level-0 .house-inner { transform: scale(0.88); }
+.house.level-1 .house-inner { transform: scale(1); }
+.house.level-2 .house-inner { transform: scale(1.14); }
 
 
