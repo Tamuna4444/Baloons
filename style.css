@@ -27,10 +27,13 @@ body.theme-advanced {
   left: 0; right: 0; bottom: 10px;
   display: flex;
   justify-content: center;
+   align-items: flex-end;
   gap: 80px;
   z-index: 6;
 }
-
+.house-inner img{
+  display: block;          /* ✅ baseline gap ქრება */
+}
 .house.glow img {
   transform: translateY(-10px) scale(1.05);
   filter: drop-shadow(0 0 24px rgba(255, 255, 255, .9));
@@ -92,7 +95,17 @@ body.theme-advanced {
   background: #ffffffb0; backdrop-filter: blur(4px);
   font-weight: 700;
 }
-
+#lives{
+  position: absolute;
+  top: 54px;          /* score-ის ქვემოთ */
+  left: 14px;         /* იგივე ხაზზე რაც score */
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: #ffffffb0;
+  backdrop-filter: blur(4px);
+  font-weight: 800;
+  z-index: 20;
+}
 
 /* გაფრენის ეფექტი სახლზე */
 .house.fly { animation: flyUp 1.2s ease-in forwards; }
@@ -331,22 +344,21 @@ body.theme-advanced {
   animation: explode 0.4s ease-out forwards;
 }
 
-/* FALLING two-color balloon (pair) */
+/* ✅ ორფერიანი ბუშტიც იგივე ზომით დაფრინავდეს როგორც ერთფერიანი */
 .balloon-pair{
   position: absolute;
-  width: 170px;          /* აი ეს არის მთავარი — რომ rect სწორად დაითვალოს */
+  top: -120px;
+  width: var(--BALLOON_SIZE);
   height: auto;
-  pointer-events: auto;  /* რომ pointerdown დაიჭიროს */
-  user-select: none;
-  touch-action: none;
-  z-index: 6;
+  z-index: 12;
+  cursor: grab;
 }
 
 .balloon-pair img{
   width: 100%;
   height: auto;
-  display: block;        /* რომ div-ს რეალური ზომა ჰქონდეს */
-  pointer-events: none;  /* drag container-ზე, არა img-ზე */
+  display: block;
+  pointer-events: none;
 }
 .house img {
   width: 190px;     /* აირჩიე შენი ზომა */
@@ -469,4 +481,7 @@ body.theme-advanced {
 .house.level-1 .house-inner { transform: scale(1); }
 .house.level-2 .house-inner { transform: scale(1.14); }
 
-
+.balloon-img.gold img,
+.gold-attached {
+  filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.65));
+}

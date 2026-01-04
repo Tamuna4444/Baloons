@@ -32,6 +32,7 @@ let gameStarted = false;
 startBtn.addEventListener('click', () => {
   mainMenu.classList.add('hidden');
   gameStarted = true;
+  spawnLoop();
   // setInterval(spawnTestBalloonPair, 1200); // ❌ არ გვჭირდება
 });
 // ეკრანები
@@ -42,6 +43,15 @@ const gameArea = document.getElementById('gameArea');
 let   houses   = [...document.querySelectorAll('.house')];
 const scoreEl  = document.getElementById('score');
 let score = 0;
+const livesEl = document.getElementById("lives");
+let lives = 3;          // start lives
+let missedBombs = 0;    // რამდენი ბომბი დაეცა მიწაზე
+
+function updateLivesUI(){
+  if (!livesEl) return;
+  livesEl.textContent = "❤️".repeat(lives);
+}
+updateLivesUI();
 let hasYellowHouse = false;
 
 function unlockYellowHouse() {
@@ -75,17 +85,33 @@ let maxBalloonsPerHouse  = 5;  // თავიდან 5, მერე 10
 let COLORS = houses.map(h => (h.dataset.color || '').trim().toLowerCase());
 
 
+const GOLD_BALLOON_IMAGE = "./image/goldballoon.png";
 
+// ✅ კონტროლი
+const GOLD_BASE_CHANCE = 0.015;   // 1.5% (იშვიათი)
+const GOLD_COOLDOWN_MS = 15000;   // 15 წამი
+let lastGoldTime = 0;
 const BOMB_CHANCE    = 0.25; // 25% ბომბი
 const BOMB_PENALTY   = 2;    // ბომბზე -2 ქულა
 const BALLOON_POINTS = 5;    // სწორ ბუშტზე +5 ქულა
 
-// --- SPAWN BALLOONS ---
-setInterval(() => {
-  
+function getSpawnInterval(){
+  if (score >= 400) return 900;
+  if (score >= 200) return 1100;
+  return 1400;
+}
+
+function getBombChance(){
+  if (score >= 400) return 0.45;
+  if (score >= 200) return 0.35;
+  return 0.25; // შენი ახლანდელი
+}
+
+function spawnLoop(){
   if (!gameStarted) return;
   spawnItem();
-}, 1400);
+  setTimeout(spawnLoop, getSpawnInterval());
+}
 
 
 function spawnItem() {
@@ -93,7 +119,7 @@ function spawnItem() {
   const upgradedHouses = houses.filter(h => h.dataset.upgraded === "1");
 
   // 25% ბომბი – იგივე დატოვე
-  const isBomb = Math.random() < BOMB_CHANCE;
+  const isBomb = Math.random() < getBombChance();
 
   // შევქმნათ ელემენტი
   const el = document.createElement('div');
@@ -121,35 +147,58 @@ function spawnItem() {
     el.dataset.exploded = "1";
     explodeBomb(el);
   }, { passive: false });
+} else {
+  // ✅ GOLD first (არ იყოს დამოკიდებული upgradedHouses-ზე)
+const now = Date.now();
+const spawnGold =
+  score >= 30 &&                 // ჯერ ცოტა ითამაშოს
+  lives < 3 &&
+  (now - lastGoldTime) > GOLD_COOLDOWN_MS &&
+  Math.random() < GOLD_BASE_CHANCE;
+
+if (spawnGold) lastGoldTime = now;
+
+  if (spawnGold) {
+    el.className = "balloon-img gold";
+    el.dataset.type = "gold";
+    el.dataset.color = "gold";
+
+    const img = document.createElement("img");
+    img.src = GOLD_BALLOON_IMAGE;
+    img.draggable = false;
+    el.appendChild(img);
+
   } else {
     // 🎈 თუ უკვე არსებობს upgraded სახლი → 60% შანსი იყოს “pair”
     const spawnPair = upgradedHouses.length > 0 && Math.random() < 0.6;
 
     if (spawnPair) {
       const target = upgradedHouses[Math.floor(Math.random() * upgradedHouses.length)];
-      const color = (target.dataset.color || "").trim().toLowerCase(); // მაგ: green / blue / red
+      const color = (target.dataset.color || "").trim().toLowerCase();
 
       el.className = "balloon-pair";
       el.dataset.type = "pair";
       el.dataset.color = color;
 
       const img = document.createElement("img");
-      img.src = HOUSE_BALLOON_PAIRS[color];   // blgreenyellow.png და ა.შ.
+      img.src = HOUSE_BALLOON_PAIRS[color];
       img.draggable = false;
       el.appendChild(img);
+
     } else {
       // 🟢 ჩვეულებრივი ერთფერიანი ბუშტი
       const color = COLORS[Math.floor(Math.random() * COLORS.length)];
       el.className = "balloon-img";
       el.dataset.type = "balloon";
       el.dataset.color = color;
-      const img = document.createElement("img");
-img.src = SINGLE_BALLOON_IMAGES[color];
-img.draggable = false;
 
-el.appendChild(img);
+      const img = document.createElement("img");
+      img.src = SINGLE_BALLOON_IMAGES[color];
+      img.draggable = false;
+      el.appendChild(img);
     }
   }
+}
 
   // პოზიცია ზემოდან
   const r = gameArea.getBoundingClientRect();
@@ -178,19 +227,27 @@ function fall(balloon) {
       return;
     }
 
-  if (y > gameArea.getBoundingClientRect().height + 120) {
+ if (y > gameArea.getBoundingClientRect().height + 120) {
 
-  // 💣 ბომბი თუ არ აფეთქდა
+  // 💣 ბომბი თუ არ აფეთქდა და მიწას დაეცა -> -1 სიცოცხლე
   if (balloon.dataset.type === "bomb" && balloon.dataset.exploded !== "1") {
-    score = Math.max(0, score - BOMB_MISS_PENALTY);
-    updateScoreUI();
+    missedBombs++;
+    lives = Math.max(0, lives - 1);
+    updateLivesUI();
+
+    // სურვილისამებრ: ქულაც დააკლო (შენზეა)
+    // score = Math.max(0, score - BOMB_MISS_PENALTY);
+    // updateScoreUI();
+
+    if (lives <= 0) {
+      gameOver();
+    }
   }
 
   alive = false;
   balloon.remove();
   return;
-
-    }
+}
 
     requestAnimationFrame(step);
   };
@@ -202,14 +259,10 @@ function fall(balloon) {
 function tryAttach(balloon) {
   const color = (balloon.dataset.color || '').trim().toLowerCase();
 
-  // ❌ თუ მოთამაშეს ბუშტზე ხელი არ ჰქონია, საერთოდ არ ვამოწმებთ დაიმაგრა თუ არა
-  if (balloon.dataset.touched !== "1") {
-    return false;
-  }
-  // ✅ ბომბი არ უნდა შედიოდეს house-attach ლოგიკაში
-if (balloon.dataset.type === "bomb") {
+if (balloon.dataset.touched !== "1" && balloon.dataset.type !== "gold") {
   return false;
 }
+
 
   // ბუშტის ცენტრის კოორდინატები
   const br = balloon.getBoundingClientRect();
@@ -239,6 +292,12 @@ if (balloon.dataset.type === "bomb") {
 
   const houseColor = (targetHouse.dataset.color || '').trim().toLowerCase();
   const type = (balloon.dataset.type || "balloon");
+
+  // 🟡 GOLD: ნებისმიერ სახლზე ემაგრება, +1 life
+if (type === "gold") {
+  attachGoldToRoof(targetHouse);
+  return true;
+}
 
   // 💣 ბომბი: სახლს თუ მოხვდა → -2, არ ვამაგრებთ სახურავზე
   if (type === "bomb") {
@@ -377,6 +436,66 @@ function attachToRoof(house, color) {
   updateScoreUI();
 
   // ✅ HOUSE_NEED-ზე აფრენა
+  if (count >= HOUSE_NEED) {
+    flyHouse(house);
+  }
+}
+function attachGoldToRoof(house) {
+  // +1 life (max 3)
+  lives = Math.min(3, lives + 1);
+  updateLivesUI();
+
+  // house balloons count +1 (რომ პროგრესშიც ითვლებოდეს)
+  let count = Number(house.dataset.has || 0);
+  count++;
+  house.dataset.has = String(count);
+
+  const anchor = house.querySelector('.anchor');
+  if (!anchor) return;
+
+  anchor.classList.add('sway');
+
+  // cluster
+  let cluster = anchor.querySelector('.cluster');
+  if (!cluster) {
+    cluster = document.createElement('div');
+    cluster.className = 'cluster';
+    anchor.appendChild(cluster);
+  }
+
+  // gold balloon image
+  const img = document.createElement("img");
+  img.src = GOLD_BALLOON_IMAGE;
+  img.className = "bimg gold-attached";
+  img.alt = "gold";
+  img.draggable = false;
+  cluster.appendChild(img);
+
+  // layout (იგივე პრინციპით როგორც attachToRoof)
+  const balloons = [...cluster.querySelectorAll('.bimg')];
+  const total = balloons.length;
+
+  const maxCols = 4;
+  const cols = Math.min(maxCols, Math.ceil(Math.sqrt(total * 1.4)));
+  const spacingX = 34;
+  const spacingY = 26;
+
+  balloons.forEach((b, index) => {
+    const row = Math.floor(index / cols);
+    const col = index % cols;
+
+    const offsetX = (col - (cols - 1) / 2) * spacingX;
+    const offsetY = -(row * spacingY);
+
+    b.style.left = `calc(50% + ${offsetX}px)`;
+    b.style.top  = `${70 + offsetY}px`;
+  });
+
+  // score (იგივე ქულა როგორც ჩვეულებრივზე)
+  score += BALLOON_POINTS;
+  updateScoreUI();
+
+  // fly check
   if (count >= HOUSE_NEED) {
     flyHouse(house);
   }
@@ -640,4 +759,9 @@ function spawnHouseBalloonPair(house) {
 
   // 3) წაშლა
   setTimeout(() => img.remove(), 1800);
+}
+function getBombSpawnInterval() {
+  if (score >= 200) return 1200;
+  if (score >= 400) return 900;
+  return 1800;
 }
