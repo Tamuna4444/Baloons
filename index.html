@@ -67,14 +67,34 @@
     <h2 class="house-title">My House</h2>
 
     <div class="house-area">
-      <img id="houseBase" src="./image/house-base.png" class="house-layer">
+      <img id="houseBase" src="" class="house-layer">
 
-      
+      </div>
     </div>
+     </div>
+<!-- SUMMARY MODAL -->
+<div id="summaryModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="summaryTitle">
+    <div class="modal-backdrop" data-close="summary"></div>
 
-    <button id="btnCloseHouse" class="btn-shop-close">Close</button>
-  </div>
+    <div class="modal-card">
+      <h2 id="summaryTitle" class="modal-title">Summary</h2>
+
+      <p class="modal-text">Your score:</p>
+      <div class="big-score" id="summaryScore">0</div>
+
+      <div class="modal-actions two">
+        <button id="summaryCloseBtn" class="btn btn-ghost">Close</button>
+        <button id="summaryRestartAdBtn" class="btn btn-primary">Restart game — Watch Ad</button>
+      </div>
+
+      <p class="modal-hint" id="summaryHint"></p>
+        <div class="scoreboard">
+  <div class="scoreboard-title">Top scores</div>
+  <div id="scoreboardList" class="scoreboard-list"></div>
 </div>
+    </div>
+  </div>
+ 
 
   <script src="./script.js" defer></script>
 </body>

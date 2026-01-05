@@ -88,8 +88,8 @@ let COLORS = houses.map(h => (h.dataset.color || '').trim().toLowerCase());
 const GOLD_BALLOON_IMAGE = "./image/goldballoon.png";
 
 // ✅ კონტროლი
-const GOLD_BASE_CHANCE = 0.015;   // 1.5% (იშვიათი)
-const GOLD_COOLDOWN_MS = 15000;   // 15 წამი
+const GOLD_BASE_CHANCE = 0.04;    // 4% (შესამჩნევი)
+const GOLD_COOLDOWN_MS = 9000;    // 9 წამი   // 15 წამი
 let lastGoldTime = 0;
 const BOMB_CHANCE    = 0.25; // 25% ბომბი
 const BOMB_PENALTY   = 2;    // ბომბზე -2 ქულა
@@ -150,25 +150,33 @@ function spawnItem() {
 } else {
   // ✅ GOLD first (არ იყოს დამოკიდებული upgradedHouses-ზე)
 const now = Date.now();
+
 const spawnGold =
-  score >= 30 &&                 // ჯერ ცოტა ითამაშოს
+  score >= 30 &&
   lives < 3 &&
   (now - lastGoldTime) > GOLD_COOLDOWN_MS &&
   Math.random() < GOLD_BASE_CHANCE;
 
 if (spawnGold) lastGoldTime = now;
 
-  if (spawnGold) {
-    el.className = "balloon-img gold";
-    el.dataset.type = "gold";
-    el.dataset.color = "gold";
+if (spawnGold) {
+  el.className = "balloon-img gold";
+  el.dataset.type = "gold";
+  el.dataset.color = "gold";
 
-    const img = document.createElement("img");
-    img.src = GOLD_BALLOON_IMAGE;
-    img.draggable = false;
-    el.appendChild(img);
+  const img = document.createElement("img");
+  img.src = GOLD_BALLOON_IMAGE;
+  img.draggable = false;
 
-  } else {
+  // ✅ დიაგნოსტიკა: ნახე იტვირთება თუ არა
+  img.onload = () => console.log("✅ GOLD image loaded:", img.src);
+  img.onerror = () => console.log("❌ GOLD image missing:", img.src);
+
+  el.appendChild(img);
+
+} else {
+
+
     // 🎈 თუ უკვე არსებობს upgraded სახლი → 60% შანსი იყოს “pair”
     const spawnPair = upgradedHouses.length > 0 && Math.random() < 0.6;
 
@@ -618,20 +626,6 @@ function enableDragX(el) {
 }
 
 
-
-
-const houseScreen   = document.getElementById('houseScreen');
-const btnCloseHouse = document.getElementById('btnCloseHouse');
-
-btnHouse.addEventListener('click', () => {
-  mainScreen.classList.add('hidden');
-  houseScreen.classList.remove('hidden');
-});
-
-btnCloseHouse.addEventListener('click', () => {
-  houseScreen.classList.add('hidden');
-  mainScreen.classList.remove('hidden');
-});
 function unlockYellowHouse() {
   const street = document.getElementById('street');
   if (!street) return;
@@ -655,17 +649,17 @@ function unlockYellowHouse() {
   houses.push(h);
   COLORS.push('yellow');
 }
+function clearFallingItems() {
+  // შენს რეალურ კლასებს ვასუფთავებთ
+  gameArea.querySelectorAll('.balloon-img, .balloon-pair, .bomb-img').forEach(el => el.remove());
+}
+
 function gameOver() {
-  gameStarted = false;
+  gameStarted = false;       // spawnLoop შეწყდება
+  clearFallingItems();
 
-  // ეკრანზე დავაბრუნოთ მთავარი მენიუ
-  mainMenu.classList.remove('hidden');
-
-  // გაწმინდოს მიმდინარე ვარდნადი ობიექტები
-  gameArea.querySelectorAll('.balloon, .bomb').forEach(el => el.remove());
-
-  // სურვილისამებრ შეტყობინება
-  alert("Game Over!");
+  // აქ აჩვენე ლამაზი Summary
+  openSummary(score);
 }
 function explodeBomb(bomb) {
   bomb.classList.add('explode');
@@ -764,4 +758,184 @@ function getBombSpawnInterval() {
   if (score >= 200) return 1200;
   if (score >= 400) return 900;
   return 1800;
+}
+// Summary modal refs
+const summaryModal = document.getElementById("summaryModal");
+const summaryScoreEl = document.getElementById("summaryScore");
+const summaryHintEl = document.getElementById("summaryHint");
+const summaryCloseBtn = document.getElementById("summaryCloseBtn");
+const summaryRestartAdBtn = document.getElementById("summaryRestartAdBtn");
+
+function openSummary(score) {
+  summaryScoreEl.textContent = score;
+  const top = addScore(score);
+renderScoreboard(top, score);
+  summaryHintEl.textContent = "";
+  summaryModal.classList.remove("hidden");
+  document.body.style.overflow = "hidden";
+}
+
+function closeSummary() {
+  summaryModal.classList.add("hidden");
+  document.body.style.overflow = "";
+}
+
+// backdrop click closes
+summaryModal.addEventListener("click", (e) => {
+  if (e.target && e.target.getAttribute("data-close") === "summary") {
+    closeSummary();
+  }
+});
+
+summaryCloseBtn.addEventListener("click", () => {
+  closeSummary();
+  mainMenu.classList.remove('hidden'); // Start ეკრანი
+});
+
+// --- Yandex Fullscreen Ad helper ---
+async function showFullscreenAd() {
+  if (!window.ysdk || !ysdk.adv || typeof ysdk.adv.showFullscreenAdv !== "function") {
+    // SDK არ არის ან ad API არ მუშაობს
+    return { ok: false, reason: "SDK not ready" };
+  }
+
+  try {
+    await ysdk.adv.showFullscreenAdv({
+      callbacks: {
+        onOpen: () => console.log("Ad open"),
+        onClose: () => console.log("Ad close"),
+        onError: (e) => console.log("Ad error", e)
+      }
+    });
+    return { ok: true };
+  } catch (e) {
+    console.log("Fullscreen ad failed:", e);
+    return { ok: false, reason: "ad failed" };
+  }
+}
+
+// Restart game — Watch Ad
+summaryRestartAdBtn.addEventListener("click", async () => {
+  // UX: disable while loading
+  summaryRestartAdBtn.disabled = true;
+  summaryHintEl.textContent = "Loading ad...";
+
+  const res = await showFullscreenAd();
+
+  // რეკლამა რომც ვერ გაეშვას, ხშირად მაინც აჯობებს restart გააკეთოს (შენ გადაწყვიტე)
+  summaryHintEl.textContent = "";
+
+  // 1) დახურე ფანჯარა
+  closeSummary();
+
+  // 2) აქ ჩასვი შენი რეალური restart logic:
+  // resetAllState(); showMainMenu(); startGame();
+  restartGameToStart(); // <-- ამ ფუნქციას ქვემოთ მოგცემ შაბლონად
+
+  summaryRestartAdBtn.disabled = false;
+});
+function restartGameToStart() {
+  score = 0;
+  lives = 3;
+  missedBombs = 0;
+  updateScoreUI();
+  updateLivesUI();
+
+  // გაწმენდა
+  gameArea.querySelectorAll('.balloon-img, .balloon-pair, .bomb-img').forEach(el => el.remove());
+
+  // დაბრუნება თამაშზე
+  mainMenu.classList.add('hidden');
+  gameStarted = true;
+  spawnLoop();
+}
+const SCOREBOARD_KEY = "balloons_top_scores_v1";
+
+function loadScores() {
+  let list = [];
+  try {
+    list = JSON.parse(localStorage.getItem(SCOREBOARD_KEY) || "[]");
+    if (!Array.isArray(list)) list = [];
+  } catch {
+    list = [];
+  }
+
+  // ✅ migrate old schema to always have {score, date, name}
+  list = list
+    .filter(x => x && typeof x.score === "number")
+    .map(x => ({
+      score: x.score,
+      date: typeof x.date === "number" ? x.date : Date.now(),
+      name: (typeof x.name === "string" && x.name.trim()) ? x.name.trim() : "Player"
+    }));
+
+  return list;
+}
+
+function saveScores(list) {
+  localStorage.setItem(SCOREBOARD_KEY, JSON.stringify(list));
+}
+
+function addScore(score) {
+  const list = loadScores();
+
+  list.push({
+    score,
+    date: Date.now()
+  });
+
+  // Sort: highest first
+  list.sort((a, b) => b.score - a.score);
+
+  // Keep top 5
+  const top = list.slice(0, 5);
+  saveScores(top);
+  return top;
+}
+
+function renderScoreboard(list, currentScore) {
+  const box = document.getElementById("scoreboardList");
+  if (!box) return;
+
+  let youUsed = false;
+
+  box.innerHTML = list.map((item, i) => {
+    // ✅ თუ ძველი ჩანაწერია და name არ აქვს → "Player"
+    let name = (item && typeof item.name === "string" && item.name.trim())
+      ? item.name.trim()
+      : "Player";
+
+    // ✅ მხოლოდ ერთი "You" — მიმდინარე შედეგზე
+    if (!youUsed && item.score === currentScore) {
+      name = "You";
+      youUsed = true;
+    }
+
+    return `
+      <div class="scoreboard-row">
+        <div class="scoreboard-rank">${i + 1}</div>
+        <div class="scoreboard-name">${escapeHtml(name)}</div>
+        <div class="scoreboard-score">${item.score}</div>
+      </div>
+    `;
+  }).join("");
+
+
+  box.innerHTML = list.map((item, i) => `
+    <div class="scoreboard-row">
+      <div class="scoreboard-rank">${i + 1}</div>
+      <div class="scoreboard-name">${escapeHtml(item.name)}</div>
+      <div class="scoreboard-score">${item.score}</div>
+    </div>
+  `).join("");
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (m) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[m]));
 }
