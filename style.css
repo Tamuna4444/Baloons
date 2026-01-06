@@ -639,3 +639,53 @@ body.theme-advanced {
   font-weight: 800;
   color: #4a3a1a;
 }
+.settings-btn{
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 20px;
+  background: linear-gradient(135deg, #ffeb99, #ffbe55);
+  border: none;
+  cursor: pointer;
+}
+
+.settings-card{
+  max-width: 360px;
+}
+
+.setting-row{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 14px 0;
+  font-weight: 600;
+  color: #4a3a1a;
+}
+
+.lang-buttons{
+  display: flex;
+  gap: 8px;
+}
+
+.lang-btn{
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+  background: rgba(255,255,255,0.7);
+  font-weight: 700;
+}
+
+.lang-btn.active{
+  background: #f2c66d;
+}
+
+.sound-btn{
+  font-size: 22px;
+  border: none;
+  background: none;
+  cursor: pointer;
+}

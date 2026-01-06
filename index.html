@@ -12,6 +12,7 @@
 <div id="mainMenu" class="main-menu">
   <div class="menu-content">
     <button id="startBtn" class="start-button">Start</button>
+    <button id="settingsBtn" class="settings-btn" aria-label="Settings">⚙️</button>
   </div>
 </div>
   <!-- მთავარი ეკრანი/თამაში -->
@@ -94,6 +95,31 @@
 </div>
     </div>
   </div>
+  <!-- SETTINGS MODAL -->
+<div id="settingsModal" class="modal hidden">
+  <div class="modal-backdrop" data-close="settings"></div>
+
+  <div class="modal-card settings-card">
+    <h2 class="modal-title">Settings</h2>
+
+    <!-- Language -->
+    <div class="setting-row">
+      <span>Language</span>
+      <div class="lang-buttons">
+        <button class="lang-btn" data-lang="en">EN</button>
+        <button class="lang-btn" data-lang="ru">RU</button>
+      </div>
+    </div>
+
+    <!-- Sound -->
+    <div class="setting-row">
+      <span>Sound</span>
+      <button id="soundToggle" class="sound-btn">🔊</button>
+    </div>
+
+    <button class="btn btn-ghost" id="closeSettingsBtn">Close</button>
+  </div>
+</div>
  
 
   <script src="./script.js" defer></script>

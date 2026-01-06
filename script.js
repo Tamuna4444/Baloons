@@ -29,12 +29,10 @@ const mainMenu = document.getElementById('mainMenu');
 const startBtn = document.getElementById('startBtn');
 let gameStarted = false;
 
-startBtn.addEventListener('click', () => {
-  mainMenu.classList.add('hidden');
-  gameStarted = true;
-  spawnLoop();
-  // setInterval(spawnTestBalloonPair, 1200); // ❌ არ გვჭირდება
-});
+startBtn.addEventListener('click', startNewGame);
+
+
+
 // ეკრანები
 const mainScreen = document.getElementById('mainScreen');
 
@@ -110,7 +108,7 @@ function getBombChance(){
 function spawnLoop(){
   if (!gameStarted) return;
   spawnItem();
-  setTimeout(spawnLoop, getSpawnInterval());
+ spawnTimerId = setTimeout(spawnLoop, getSpawnInterval());
 }
 
 
@@ -789,7 +787,8 @@ summaryModal.addEventListener("click", (e) => {
 
 summaryCloseBtn.addEventListener("click", () => {
   closeSummary();
-  mainMenu.classList.remove('hidden'); // Start ეკრანი
+  stopGame();                       // ✅ გაჩერება
+  mainMenu.classList.remove('hidden'); // ✅ Start ეკრანი
 });
 
 // --- Yandex Fullscreen Ad helper ---
@@ -921,13 +920,7 @@ function renderScoreboard(list, currentScore) {
   }).join("");
 
 
-  box.innerHTML = list.map((item, i) => `
-    <div class="scoreboard-row">
-      <div class="scoreboard-rank">${i + 1}</div>
-      <div class="scoreboard-name">${escapeHtml(item.name)}</div>
-      <div class="scoreboard-score">${item.score}</div>
-    </div>
-  `).join("");
+
 }
 
 function escapeHtml(str) {
@@ -939,3 +932,100 @@ function escapeHtml(str) {
     "'": "&#39;"
   }[m]));
 }
+let spawnTimerId = null; // თუ spawnLoop setTimeout-ს იყენებს
+
+function stopGame() {
+  gameStarted = false;
+
+  // თუ setTimeout loop გაქვს
+  if (spawnTimerId) {
+    clearTimeout(spawnTimerId);
+    spawnTimerId = null;
+  }
+
+  // გაწმენდა ეკრანის (შენივე კლასებით)
+  gameArea.querySelectorAll('.balloon-img, .balloon-pair, .bomb-img').forEach(el => el.remove());
+}
+function startNewGame() {
+  // 🔁 reset state
+  score = 0;
+  lives = 3;
+  missedBombs = 0;
+  streakHouseId = null;
+  streakCount = 0;
+
+  updateScoreUI();
+  updateLivesUI();
+
+  // 🧹 ეკრანის გაწმენდა
+  gameArea.querySelectorAll(
+    '.balloon-img, .balloon-pair, .bomb-img'
+  ).forEach(el => el.remove());
+
+  // ▶️ Start
+  mainMenu.classList.add('hidden');
+  gameStarted = true;
+  spawnLoop();
+}
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsModal = document.getElementById("settingsModal");
+const closeSettingsBtn = document.getElementById("closeSettingsBtn");
+
+const langButtons = document.querySelectorAll(".lang-btn");
+const soundToggle = document.getElementById("soundToggle");
+
+// --- Settings open/close ---
+settingsBtn.addEventListener("click", () => {
+  settingsModal.classList.remove("hidden");
+});
+
+closeSettingsBtn.addEventListener("click", () => {
+  settingsModal.classList.add("hidden");
+});
+
+settingsModal.addEventListener("click", (e) => {
+  if (e.target.dataset.close === "settings") {
+    settingsModal.classList.add("hidden");
+  }
+});
+
+// --- Language ---
+let currentLang = localStorage.getItem("game_lang") || "en";
+
+function applyLanguage(lang){
+  currentLang = lang;
+  localStorage.setItem("game_lang", lang);
+
+  langButtons.forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.lang === lang);
+  });
+
+  // აქ უნდა დაუძახო შენს არსებულ ენების ლოგიკას
+  // changeLanguage(lang);
+}
+
+langButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    applyLanguage(btn.dataset.lang);
+  });
+});
+
+applyLanguage(currentLang);
+
+// --- Sound ---
+let soundOn = localStorage.getItem("sound_on") !== "false";
+
+function updateSoundUI(){
+  soundToggle.textContent = soundOn ? "🔊" : "🔇";
+}
+
+soundToggle.addEventListener("click", () => {
+  soundOn = !soundOn;
+  localStorage.setItem("sound_on", soundOn);
+  updateSoundUI();
+
+  // აქ დაუკავშირე შენი აუდიოები
+  // setSoundEnabled(soundOn);
+});
+
+updateSoundUI();
