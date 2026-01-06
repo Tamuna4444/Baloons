@@ -61,7 +61,7 @@ function unlockYellowHouse() {
 
 
 function updateScoreUI() {
-  scoreEl.textContent = 'Score: ' + score;
+  scoreEl.textContent = `${t("score")}: ${score}`;
 
   if (!hasYellowHouse && score >= 100) {
     hasYellowHouse = true;
@@ -138,13 +138,14 @@ function spawnItem() {
   el.appendChild(img);
 
   // 🔥 კლიკზე / თაჩზე აფეთქება
-  el.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
+el.addEventListener("pointerdown", (e) => {
+  e.preventDefault();
+  e.stopPropagation();
 
-    el.dataset.exploded = "1";
-    explodeBomb(el);
-  }, { passive: false });
+  el.dataset.exploded = "1";
+  el.dataset.safePop = "1";   // ✅ ეს დაამატე: ჰაერში აფეთქდა → ქულა არ შეიცვალოს
+  explodeBomb(el);
+}, { passive: false });
 } else {
   // ✅ GOLD first (არ იყოს დამოკიდებული upgradedHouses-ზე)
 const now = Date.now();
@@ -227,11 +228,18 @@ function fall(balloon) {
     y += vy;
     balloon.style.top = `${y}px`;
 
-    if (tryAttach(balloon)) {
-      alive = false;
-      balloon.remove();
-      return;
-    }
+  if (tryAttach(balloon)) {
+  alive = false;
+
+  // 💣 აფეთქება მხოლოდ ბომბისთვის
+  if (balloon.dataset.type === "bomb") {
+    explodeBomb(balloon);
+  } else {
+    balloon.remove();
+  }
+
+  return;
+}
 
  if (y > gameArea.getBoundingClientRect().height + 120) {
 
@@ -306,22 +314,25 @@ if (type === "gold") {
 }
 
   // 💣 ბომბი: სახლს თუ მოხვდა → -2, არ ვამაგრებთ სახურავზე
-  if (type === "bomb") {
-    const prev = score;
-    score = Math.max(0, score - BOMB_PENALTY);
-   updateScoreUI();
-
-    // streak წყდება
-    streakHouseId = null;
-    streakCount   = 0;
-
-    // თუ ქულა დაკლებით 0-მდე ჩამოვიდა → Game Over
-    if (prev > 0 && score === 0) {
-      gameOver();
-    }
-
-    return true; // დამუშავდა (fall() მოაშორებს ელემენტს)
+ if (type === "bomb") {
+  // ✅ თუ მოთამაშემ ჰაერში ააფეთქა → ქულა არ აკლდება
+  if (balloon.dataset.safePop === "1") {
+    return true;
   }
+
+  const prev = score;
+  score = Math.max(0, score - BOMB_PENALTY);
+  updateScoreUI();
+
+  streakHouseId = null;
+  streakCount   = 0;
+
+  if (prev > 0 && score === 0) {
+    gameOver();
+  }
+
+  return true;
+}
 if (type === "pair") {
   // ✅ გამოიყენე უკვე დამუშავებული "color"
   if (houseColor !== color) return true;
@@ -660,13 +671,46 @@ function gameOver() {
   openSummary(score);
 }
 function explodeBomb(bomb) {
-  bomb.classList.add('explode');
+  const rect = bomb.getBoundingClientRect();
+  const gameRect = gameArea.getBoundingClientRect();
 
-  setTimeout(() => {
-    bomb.remove();
-  }, 400);
+  // 💥 Explosion visual
+  const explosion = document.createElement("div");
+  explosion.className = "bomb-explosion";
+
+  explosion.style.left = (rect.left - gameRect.left + rect.width / 2 - 60) + "px";
+  explosion.style.top  = (rect.top - gameRect.top + rect.height / 2 - 60) + "px";
+
+  gameArea.appendChild(explosion);
+
+  // 🌪 Screen shake
+  gameArea.classList.add("screen-shake");
+  setTimeout(() => gameArea.classList.remove("screen-shake"), 300);
+
+  // 🧹 Cleanup
+  setTimeout(() => explosion.remove(), 450);
+
+  // Remove bomb itself
+  bomb.remove();
 }
+function popBalloonMidAir(el) {
+  // უკვე თუ დაიპოპა/წაიშალა
+  if (!el || el.dataset.popped === "1") return;
+  el.dataset.popped = "1";
 
+  const rect = el.getBoundingClientRect();
+  const gameRect = gameArea.getBoundingClientRect();
+
+  const pop = document.createElement("div");
+  pop.className = "balloon-pop";
+  pop.style.left = (rect.left - gameRect.left + rect.width / 2 - 55) + "px";
+  pop.style.top  = (rect.top - gameRect.top + rect.height / 2 - 55) + "px";
+
+  gameArea.appendChild(pop);
+
+  setTimeout(() => pop.remove(), 400);
+  el.remove(); // ✅ ქულას არ ვეხებით
+}
 
 function spawnTestBalloonPair() {
   const img = document.createElement("img");
@@ -946,6 +990,33 @@ function stopGame() {
   // გაწმენდა ეკრანის (შენივე კლასებით)
   gameArea.querySelectorAll('.balloon-img, .balloon-pair, .bomb-img').forEach(el => el.remove());
 }
+function resetHousesState() {
+  houses.forEach(h => {
+    // reset gameplay data
+    h.dataset.has = "0";
+    h.dataset.level = "0";
+    delete h.dataset.upgraded;
+
+    // reset classes
+    h.classList.remove("fly", "level-1", "level-2");
+    h.classList.add("level-0");
+
+    // clear roof balloons/cluster
+    const anchor = h.querySelector(".anchor");
+    if (anchor) {
+      anchor.innerHTML = "";
+      anchor.classList.remove("sway");
+    }
+
+    // reset image to first skin + remove big marker
+    const color = (h.dataset.color || "").trim().toLowerCase();
+    const img = h.querySelector("img");
+    if (img && HOUSE_SKINS[color]) {
+      img.src = HOUSE_SKINS[color][0];
+      img.classList.remove("house--big");
+    }
+  });
+}
 function startNewGame() {
   // 🔁 reset state
   score = 0;
@@ -956,7 +1027,8 @@ function startNewGame() {
 
   updateScoreUI();
   updateLivesUI();
-
+   document.body.classList.add("game-active");
+ resetHousesState();
   // 🧹 ეკრანის გაწმენდა
   gameArea.querySelectorAll(
     '.balloon-img, .balloon-pair, .bomb-img'
@@ -990,18 +1062,103 @@ settingsModal.addEventListener("click", (e) => {
 });
 
 // --- Language ---
-let currentLang = localStorage.getItem("game_lang") || "en";
+
+const translations = {
+  en: {
+    start: "Start",
+    settings: "Settings",
+    language: "Language",
+    sound: "Sound",
+    close: "Close",
+    summary: "Summary",
+    yourScore: "Your score:",
+    restartAd: "Restart game — Watch Ad",
+    topScores: "Top scores",
+    score: "Score"
+  },
+  ru: {
+    start: "Начать",
+    settings: "Настройки",
+    language: "Язык",
+    sound: "Звук",
+    close: "Закрыть",
+    summary: "Итоги",
+    yourScore: "Ваш счёт:",
+    restartAd: "Перезапустить — Смотреть рекламу",
+    topScores: "Лучшие результаты",
+    score: "Счёт"
+  }
+};
+
+function t(key){
+  const dict = translations[currentLang] || translations.en;
+  return dict[key] || (translations.en[key] || key);
+}
+function detectInitialLanguage() {
+  // 1️⃣ localStorage
+  const saved = localStorage.getItem("game_lang");
+  if (saved === "en" || saved === "ru") return saved;
+
+  // 2️⃣ Yandex SDK
+  if (ysdk && ysdk.environment && ysdk.environment.i18n) {
+    const lang = ysdk.environment.i18n.lang;
+    if (lang && lang.startsWith("en")) return "en";
+    if (lang && lang.startsWith("ru")) return "ru";
+  }
+
+  // 3️⃣ fallback
+  return "ru";
+}
+function changeLanguage(lang){
+  currentLang = (lang === "ru") ? "ru" : "en";
+  localStorage.setItem("game_lang", currentLang);
+
+  // Start button
+  const startBtn = document.getElementById("startBtn");
+  if (startBtn) startBtn.textContent = t("start");
+
+  // Settings modal texts
+  if (settingsModal) {
+    const title = settingsModal.querySelector(".modal-title");
+    if (title) title.textContent = t("settings");
+
+    const rows = settingsModal.querySelectorAll(".setting-row span");
+    if (rows[0]) rows[0].textContent = t("language");
+    if (rows[1]) rows[1].textContent = t("sound");
+  }
+
+  if (closeSettingsBtn) closeSettingsBtn.textContent = t("close");
+
+  // Summary modal texts
+  const summaryModal = document.getElementById("summaryModal");
+  if (summaryModal) {
+    const title = document.getElementById("summaryTitle");
+    if (title) title.textContent = t("summary");
+
+    const p = summaryModal.querySelector(".modal-text");
+    if (p) p.textContent = t("yourScore");
+
+    const top = summaryModal.querySelector(".scoreboard-title");
+    if (top) top.textContent = t("topScores");
+  }
+
+  const summaryCloseBtn = document.getElementById("summaryCloseBtn");
+  if (summaryCloseBtn) summaryCloseBtn.textContent = t("close");
+
+  const summaryRestartAdBtn = document.getElementById("summaryRestartAdBtn");
+  if (summaryRestartAdBtn) summaryRestartAdBtn.textContent = t("restartAd");
+
+  // Score label refresh
+  updateScoreUI();
+}
+
+
 
 function applyLanguage(lang){
-  currentLang = lang;
-  localStorage.setItem("game_lang", lang);
-
   langButtons.forEach(btn => {
     btn.classList.toggle("active", btn.dataset.lang === lang);
   });
-
-  // აქ უნდა დაუძახო შენს არსებულ ენების ლოგიკას
-  // changeLanguage(lang);
+  changeLanguage(lang); // ✅ აღარ იყოს დაკომენტარებული
 }
 
 langButtons.forEach(btn => {
@@ -1010,7 +1167,6 @@ langButtons.forEach(btn => {
   });
 });
 
-applyLanguage(currentLang);
 
 // --- Sound ---
 let soundOn = localStorage.getItem("sound_on") !== "false";
@@ -1029,3 +1185,25 @@ soundToggle.addEventListener("click", () => {
 });
 
 updateSoundUI();
+
+// --- YANDEX SDK INIT ---
+let ysdk = null;
+
+if (window.YaGames && typeof YaGames.init === "function") {
+  YaGames.init().then((_ysdk) => {
+    ysdk = _ysdk;
+
+    // ✅ აქ არის ერთადერთი სწორი ადგილი ენის დასაყენებლად
+    const detectedLang = detectInitialLanguage();
+    applyLanguage(detectedLang);
+
+  }).catch((e) => {
+    console.log("Yandex SDK init error:", e);
+
+    // fallback
+    applyLanguage("ru");
+  });
+} else {
+  // ლოკალურად / GitHub Pages
+  applyLanguage("ru");
+}

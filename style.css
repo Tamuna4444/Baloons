@@ -12,11 +12,17 @@ body {
 body.theme-advanced {
   background: url(./image/backtwo.png) no-repeat center center / cover;
 }
-
+/* ✅ მთავარი კონტეინერი მობილურზე უნდა იყოს “საყრდენი” აბსოლუტებისთვის */
+#mainScreen{
+  position: relative;
+  width: 100vw;
+  height: 100svh;     /* ✅ მობილურის სწორი სიმაღლე */
+  overflow: hidden;
+}
 /* ზედა სათამაშო სივრცე */
 #gameArea {
   position: relative;
-  height: 70vh;
+  height: 95vh; 
   overflow: hidden;
   z-index: 5;
 }
@@ -39,8 +45,8 @@ body.theme-advanced {
   filter: drop-shadow(0 0 24px rgba(255, 255, 255, .9));
 }
 :root{
-  --BALLOON_SIZE: 90px;        /* ვარდნადი ბუშტი */
-  --BALLOON_ATTACH_SIZE: 40px; /* დამაგრებული ბუშტი (სახურავზე) */
+  --BALLOON_SIZE: 100px;        /* ვარდნადი ბუშტი */
+  --BALLOON_ATTACH_SIZE: 80px; /* დამაგრებული ბუშტი (სახურავზე) */
 }
 
 
@@ -92,8 +98,20 @@ body.theme-advanced {
 #score {
   position: absolute; top: 14px; left: 14px;
   padding: 6px 10px; border-radius: 10px;
-  background: #ffffffb0; backdrop-filter: blur(4px);
+  background: #ffeb99;
   font-weight: 700;
+    box-shadow:
+    0 10px 24px rgba(0,0,0,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.6);
+
+  backdrop-filter: blur(6px);
+
+}
+.start-button:active{
+  transform: translateY(3px);
+  box-shadow:
+    0 6px 0 #cfa24f,
+    0 12px 22px rgba(0,0,0,0.4);
 }
 #lives{
   position: absolute;
@@ -101,7 +119,7 @@ body.theme-advanced {
   left: 14px;         /* იგივე ხაზზე რაც score */
   padding: 6px 10px;
   border-radius: 10px;
-  background: #ffffffb0;
+  background:#ffeb99;
   backdrop-filter: blur(4px);
   font-weight: 800;
   z-index: 20;
@@ -244,9 +262,7 @@ body.theme-advanced {
 }
 
 
-#mainScreen.hidden {
-  display: none;
-}
+
 .main-menu {
   position: fixed;
   inset: 0;
@@ -688,4 +704,57 @@ body.theme-advanced {
   border: none;
   background: none;
   cursor: pointer;
+}
+/* Settings button ONLY in main menu */
+body.game-active .top-right-buttons {
+  display: none;
+}
+/* 💥 Bomb explosion core */
+.bomb-explosion {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 50;
+
+  background: radial-gradient(
+    circle,
+    rgba(255, 220, 120, 0.95) 0%,
+    rgba(255, 120, 50, 0.85) 35%,
+    rgba(200, 40, 20, 0.6) 55%,
+    rgba(120, 0, 0, 0.2) 70%,
+    transparent 75%
+  );
+
+  animation: explosion-pop 420ms ease-out forwards;
+}
+
+@keyframes explosion-pop {
+  0% {
+    transform: scale(0.2);
+    opacity: 0.8;
+  }
+  60% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* 🌪 Screen shake */
+@keyframes screen-shake {
+  0%   { transform: translate(0, 0); }
+  20%  { transform: translate(-4px, 2px); }
+  40%  { transform: translate(4px, -2px); }
+  60%  { transform: translate(-3px, 2px); }
+  80%  { transform: translate(3px, -2px); }
+  100% { transform: translate(0, 0); }
+}
+
+.screen-shake {
+  animation: screen-shake 300ms ease;
 }

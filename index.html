@@ -11,7 +11,7 @@
   <!-- MAIN MENU SCREEN -->
 <div id="mainMenu" class="main-menu">
   <div class="menu-content">
-    <button id="startBtn" class="start-button">Start</button>
+<button id="startBtn" class="start-button" data-i18n="start"></button>
     <button id="settingsBtn" class="settings-btn" aria-label="Settings">⚙️</button>
   </div>
 </div>
@@ -49,14 +49,14 @@
 
       <div id="house-yellow" class="house hidden" data-color="yellow" data-need="5" data-has="0" data-level="0">
          <div class="house-inner">
-  <img src="./image/yellowh.png" alt="Yellow House" />
+  <img src="./image/yellow.png" alt="Yellow House" />
   <div class="anchor"></div>
 </div>
 </div>
 
     </div>
 
-    <div id="score">Score: 0</div>
+   <div id="score" data-i18n="score">Score: 0</div>
     <div id="lives">❤️❤️❤️</div>
   </div>
 
@@ -78,19 +78,19 @@
     <div class="modal-backdrop" data-close="summary"></div>
 
     <div class="modal-card">
-      <h2 id="summaryTitle" class="modal-title">Summary</h2>
+      <h2 id="summaryTitle" class="modal-title" data-i18n="summary"></h2>
 
-      <p class="modal-text">Your score:</p>
+     <p class="modal-text" data-i18n="yourScore"></p>
       <div class="big-score" id="summaryScore">0</div>
 
       <div class="modal-actions two">
-        <button id="summaryCloseBtn" class="btn btn-ghost">Close</button>
-        <button id="summaryRestartAdBtn" class="btn btn-primary">Restart game — Watch Ad</button>
+<button id="summaryCloseBtn" class="btn btn-ghost" data-i18n="close"></button>
+<button id="summaryRestartAdBtn" class="btn btn-primary" data-i18n="restartAd"></button>
       </div>
 
       <p class="modal-hint" id="summaryHint"></p>
         <div class="scoreboard">
-  <div class="scoreboard-title">Top scores</div>
+ <div class="scoreboard-title" data-i18n="topScores"></div>
   <div id="scoreboardList" class="scoreboard-list"></div>
 </div>
     </div>
@@ -100,11 +100,12 @@
   <div class="modal-backdrop" data-close="settings"></div>
 
   <div class="modal-card settings-card">
-    <h2 class="modal-title">Settings</h2>
+   <h2 class="modal-title" data-i18n="settings"></h2>
 
     <!-- Language -->
-    <div class="setting-row">
-      <span>Language</span>
+  <div class="setting-row">
+  <span data-i18n="language"></span>
+
       <div class="lang-buttons">
         <button class="lang-btn" data-lang="en">EN</button>
         <button class="lang-btn" data-lang="ru">RU</button>
@@ -112,8 +113,8 @@
     </div>
 
     <!-- Sound -->
-    <div class="setting-row">
-      <span>Sound</span>
+   <div class="setting-row">
+  <span data-i18n="sound"></span>
       <button id="soundToggle" class="sound-btn">🔊</button>
     </div>
 
