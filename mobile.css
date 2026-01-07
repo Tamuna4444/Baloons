@@ -1,0 +1,110 @@
+/* ✅ ეს ფაილი არ ეხება დესკტოპს საერთოდ */
+
+.rotate-overlay.hidden{ display:none; }
+
+.rotate-overlay{
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: grid;
+  place-items: center;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(6px);
+}
+
+.rotate-card{
+  width: min(92vw, 420px);
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255, 248, 230, 0.95);
+  box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+  text-align: center;
+  color: #4a3a1a;
+}
+
+@media (orientation: portrait) {
+  #rotateOverlay{ display:grid; }
+  #mainScreen, #mainMenu{ display:none !important; }
+}
+
+@media (orientation: landscape) {
+  #rotateOverlay{ display:none; }
+  #mainScreen, #mainMenu{ display:block; }
+}
+#mainScreen{
+  height: 100svh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
+}
+
+@supports (height: 100dvh){
+  #mainScreen{ height: 100dvh; }
+}
+
+#gameArea{
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Summary modal პატარა landscape-ზე */
+@media (orientation: landscape) and (max-height: 460px) {
+  .modal-card{
+    width: min(420px, 92vw);
+    max-height: 88svh;
+    overflow: auto;
+    padding: 16px 14px;
+  }
+  .big-score{ font-size: 38px; }
+  .scoreboard{ max-height: 140px; overflow:auto; }
+}
+/* ✅ MOBILE ONLY (touch devices) */
+
+/* მენიუ სრულ ეკრანზე სწორად (საფარი vh პრობლემის გარეშე) */
+#mainMenu.main-menu{
+  height: 100svh;
+}
+@supports (height: 100dvh){
+  #mainMenu.main-menu{ height: 100dvh; }
+}
+
+/* Landscape-ზე Start ღილაკი ვიზუალურად უკეთეს ადგილზე */
+@media (orientation: landscape){
+  #mainMenu.main-menu{
+    align-items: flex-start;                 /* აღარ იყოს ზუსტად ცენტრში */
+    padding-top: max(50svh, 28px); 
+  }
+  .menu-content{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .start-button{
+    font-size: 24px;
+    padding: 12px 40px;
+    border-radius: 36px;
+  }
+
+  /* settings ღილაკი safe-area-ზე */
+  .settings-btn{
+    top: max(14px, env(safe-area-inset-top));
+    right: max(14px, env(safe-area-inset-right));
+  }
+}
+
+/* landscape ტელეფონზე: overlay გამორთე */
+@media (orientation: landscape) and (hover: none) and (pointer: coarse) {
+  #rotateOverlay { display: none; }
+
+  /* ✅ mainScreen გამოჩნდეს როცა hidden არაა */
+  #mainScreen.hidden { display: none !important; }
+  #mainScreen:not(.hidden) { display: block !important; }
+
+  /* ✅ mainMenu გამოჩნდეს მხოლოდ როცა hidden არაა */
+  #mainMenu.hidden { display: none !important; }
+  #mainMenu:not(.hidden) { display: flex !important; } /* შენთან mainMenu flex-ია */
+}

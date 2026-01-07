@@ -3,7 +3,7 @@ const HOUSE_SKINS = {
   red:   ["./image/redh.png",   "./image/bigred.png",  "./image/bigredhouse.png"],
   blue:  ["./image/blueh.png",  "./image/bigblue.png","./image/bigbluehouse.png"],
   green: ["./image/greenh.png", "./image/biggreen.png","./image/biggreenhouse.png"],
-  yellow:["./image/yellowh.png","./image/bluehdouble.png", "./image/bigyellowhouse.png"],
+  yellow:["./image/yellow.png","./image/bluehdouble.png", "./image/bigyellowhouse.png"],
 };
 const HOUSE_NEED = 5;       // 15 ბუშტზე აფრინდეს სახლი
 
@@ -78,6 +78,24 @@ let hasDoublePalette   = false;
 
 let fallSpeedMultiplier  = 1;  // 40 ქულაზე გაიზრდება
 let maxBalloonsPerHouse  = 5;  // თავიდან 5, მერე 10
+
+let gameStartTime = 0;
+
+function updateDifficulty() {
+  // ⏱ დროის მიხედვით: პირველივე წამებში ოდნავ აჩქარდეს
+  const tSec = gameStartTime ? (Date.now() - gameStartTime) / 1000 : 0;
+
+  let m = 1.15;              // ✅ თავიდანვე ცოტა სწრაფი
+  if (tSec >= 3) m += 0.15;  // 3 წამში +0.15
+  if (tSec >= 6) m += 0.20;  // 6 წამში +0.20 (ჯამში +0.35)
+
+  // 🎯 ქულის მიხედვით: 200+ ქულაზე აშკარა აჩქარება
+  if (score >= 200) m += 0.55;
+  if (score >= 400) m += 0.35;
+
+  // ზედა ზღვარი (რომ “არ გაფრინდეს”)
+  fallSpeedMultiplier = Math.min(m, 3.0);
+}
 
 // ფერების სია სახლებიდან (შესაცვლელი იქნება, როცა ყვითელი დაემატება)
 let COLORS = houses.map(h => (h.dataset.color || '').trim().toLowerCase());
@@ -808,10 +826,24 @@ const summaryHintEl = document.getElementById("summaryHint");
 const summaryCloseBtn = document.getElementById("summaryCloseBtn");
 const summaryRestartAdBtn = document.getElementById("summaryRestartAdBtn");
 
-function openSummary(score) {
+async function openSummary(score) {
   summaryScoreEl.textContent = score;
+
+  // 1) Local scoreboard (დარჩეს როგორც fallback / offline)
   const top = addScore(score);
-renderScoreboard(top, score);
+  renderScoreboard(top, score);
+
+  // 2) Yandex leaderboard (თუ ხელმისაწვდომია)
+  const ok = await submitScoreToYandex(score);
+
+  if (ok) {
+    const res = await fetchTopFromYandex(5);
+    const entries = normalizeYandexEntries(res);
+    if (entries.length) {
+      renderYandexScoreboard(entries, score);
+    }
+  }
+
   summaryHintEl.textContent = "";
   summaryModal.classList.remove("hidden");
   document.body.style.overflow = "hidden";
@@ -920,18 +952,32 @@ function saveScores(list) {
 }
 
 function addScore(score) {
-  const list = loadScores();
+  const list = loadScores().filter(it => it && typeof it.score === "number");
 
-  list.push({
-    score,
-    date: Date.now()
-  });
+  // ✅ თუ იგივე ქულა უკვე არსებობს — არ დავამატოთ ახალი ჩანაწერი,
+  // უბრალოდ განვაახლოთ თარიღი (ანუ "ბოლოს მიღებული")
+  const existing = list.find(it => it.score === score);
+  if (existing) {
+    existing.date = Date.now();
+  } else {
+    list.push({ score, date: Date.now() });
+  }
 
-  // Sort: highest first
-  list.sort((a, b) => b.score - a.score);
+  // ✅ საბოლოო დედუპი: ერთ ქულაზე ერთი ჩანაწერი (ვტოვებთ ყველაზე ახალს)
+  const map = new Map();
+  for (const it of list) {
+    const prev = map.get(it.score);
+    if (!prev || (it.date || 0) > (prev.date || 0)) {
+      map.set(it.score, it);
+    }
+  }
 
-  // Keep top 5
-  const top = list.slice(0, 5);
+  const unique = [...map.values()];
+
+  // Sort: highest first, და თუ ერთნაირია — ახალი ზემოთ
+  unique.sort((a, b) => (b.score - a.score) || ((b.date || 0) - (a.date || 0)));
+
+  const top = unique.slice(0, 5);
   saveScores(top);
   return top;
 }
@@ -1189,21 +1235,152 @@ updateSoundUI();
 // --- YANDEX SDK INIT ---
 let ysdk = null;
 
+// === YANDEX LEADERBOARD (server-side) ===
+const YANDEX_LB_NAME = "balloons_main";
+
+let yLb = null; // leaderboards instance (depends on SDK version)
+
+async function initYandexLeaderboards() {
+  if (!ysdk) return null;
+
+  try {
+    // Newer SDK style
+    if (typeof ysdk.getLeaderboards === "function") {
+      yLb = await ysdk.getLeaderboards();
+      return yLb;
+    }
+
+    // Older style fallback (some builds expose ysdk.leaderboards)
+    if (ysdk.leaderboards) {
+      yLb = ysdk.leaderboards;
+      return yLb;
+    }
+  } catch (e) {
+    console.log("Leaderboards init failed:", e);
+  }
+
+  yLb = null;
+  return null;
+}
+
+async function submitScoreToYandex(scoreValue) {
+  if (!ysdk) return false;
+  if (!Number.isFinite(scoreValue)) return false;
+
+  const s = Math.max(0, Math.floor(scoreValue));
+  if (!yLb) await initYandexLeaderboards();
+  if (!yLb) return false;
+
+  try {
+    // Two possible API shapes:
+    if (typeof yLb.setLeaderboardScore === "function") {
+      await yLb.setLeaderboardScore(YANDEX_LB_NAME, s);
+      return true;
+    }
+    if (typeof yLb.setScore === "function") {
+      await yLb.setScore(YANDEX_LB_NAME, s);
+      return true;
+    }
+
+    // If SDK uses direct method names
+    if (typeof yLb.setScore === "function") {
+      await yLb.setScore(YANDEX_LB_NAME, s);
+      return true;
+    }
+  } catch (e) {
+    console.log("Submit score failed:", e);
+  }
+
+  return false;
+}
+
+async function fetchTopFromYandex(limit = 5) {
+  if (!ysdk) return null;
+
+  if (!yLb) await initYandexLeaderboards();
+  if (!yLb) return null;
+
+  try {
+    // Newer API
+    if (typeof yLb.getLeaderboardEntries === "function") {
+      const res = await yLb.getLeaderboardEntries(YANDEX_LB_NAME, {
+        quantityTop: limit,
+        includeUser: true,
+        quantityAround: 0
+      });
+      return res;
+    }
+
+    // Older API
+    if (typeof yLb.getEntries === "function") {
+      const res = await yLb.getEntries(YANDEX_LB_NAME, {
+        quantityTop: limit,
+        includeUser: true,
+        quantityAround: 0
+      });
+      return res;
+    }
+  } catch (e) {
+    console.log("Fetch leaderboard failed:", e);
+  }
+
+  return null;
+}
+
+function normalizeYandexEntries(res) {
+  // აბრუნებს ერთიან მასივს: [{name, score, rank}]
+  if (!res || !Array.isArray(res.entries)) return [];
+
+  return res.entries.map((e) => {
+    const name =
+      (e.player && (e.player.publicName || e.player.name)) ||
+      "Player";
+
+    const scoreVal =
+      (e.score && (e.score.value ?? e.score)) ??
+      0;
+
+    return {
+      name,
+      score: Number(scoreVal) || 0,
+      rank: Number(e.rank) || 0
+    };
+  });
+}
+
+function renderYandexScoreboard(entries, currentScore) {
+  const box = document.getElementById("scoreboardList");
+  if (!box) return;
+
+  box.innerHTML = entries.slice(0, 5).map((item, i) => {
+    // "You" თუ ამ ქულას დაემთხვა (უბრალო UX)
+    const labelName = (item.score === currentScore) ? "You" : item.name;
+
+    return `
+      <div class="scoreboard-row">
+        <div class="scoreboard-rank">${item.rank ? item.rank : (i + 1)}</div>
+        <div class="scoreboard-name">${escapeHtml(labelName)}</div>
+        <div class="scoreboard-score">${item.score}</div>
+      </div>
+    `;
+  }).join("");
+}
+
 if (window.YaGames && typeof YaGames.init === "function") {
   YaGames.init().then((_ysdk) => {
     ysdk = _ysdk;
 
-    // ✅ აქ არის ერთადერთი სწორი ადგილი ენის დასაყენებლად
     const detectedLang = detectInitialLanguage();
     applyLanguage(detectedLang);
 
+    // ✅ აქ უნდა იყოს
+    initYandexLeaderboards();
+
   }).catch((e) => {
     console.log("Yandex SDK init error:", e);
-
-    // fallback
     applyLanguage("ru");
   });
 } else {
-  // ლოკალურად / GitHub Pages
   applyLanguage("ru");
 }
+   
