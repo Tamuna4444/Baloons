@@ -117,18 +117,17 @@ html, body{
   #mainMenu:not(.hidden) { display: flex !important; } /* შენთან mainMenu flex-ია */
 }
 /* ===== Summary modal: mobile sizing ===== */
-@media (max-width: 320px){
+/* ===== Summary modal: mobile sizing (ALL phones) ===== */
+@media (hover: none) and (pointer: coarse) {
   .modal{
     padding: 10px;
     place-items: center;
   }
 
   .modal-card{
-    width: min(180px, 92vw);
+    width: min(360px, 92vw);
     padding: 16px 14px;
     border-radius: 20px;
-
-    /* IMPORTANT: do not let it exceed screen height */
     max-height: calc(var(--vh, 1vh) * 100 - 20px);
     overflow: auto;
     -webkit-overflow-scrolling: touch;
@@ -136,20 +135,18 @@ html, body{
 
   .modal-title{ font-size: 20px; }
   .modal-text{ font-size: 13px; }
+  .big-score{ font-size: 34px; margin: 6px 0 10px; }
 
-  .big-score{
-    font-size: 30px;
-    margin: 6px 0 10px;
-  }
-
-  .modal-actions{
-    gap: 10px;
+  .scoreboard{
+    max-height: 140px;
+    overflow: auto;
   }
 
   .btn{
     padding: 12px 14px;
     font-size: 14px;
   }
+
 
   /* scoreboard blocks often make modal too tall */
   .scoreboard{
@@ -158,5 +155,27 @@ html, body{
     border-radius: 16px;
     max-height: 150px;
     overflow: auto;
+  }
+}
+/* ===== MOBILE: smaller houses + tighter spacing ===== */
+@media (hover: none) and (pointer: coarse) {
+  .street{
+    gap: 34px;            /* იყო 80px style.css-ში */
+    bottom: 6px;
+  }
+
+  /* პატარა სახლები */
+  .house.level-0 .house-inner { transform: scale(0.72); }
+  .house.level-1 .house-inner { transform: scale(0.82); }
+  .house.level-2 .house-inner { transform: scale(0.95); }
+
+  /* თუ მაინც დიდია, ამ ერთს კიდევ დაუწიე: */
+  /* .house img { width: 160px; } */
+}
+@media (hover: none) and (pointer: coarse) {
+  .anchor{
+    width: 180px;
+    height: 120px;
+    top: 18px;   /* ოდნავ მაღლა, რომ დამიზნება გაიოლდეს */
   }
 }

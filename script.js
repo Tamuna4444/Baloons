@@ -78,14 +78,30 @@ document.addEventListener("click", (e) => {
   playSfx("click");
 });
 // play helper (respects soundOn from Settings section)
-function playSfx(key) {
-  if (!soundOn) return;          // soundOn მოდის ქვემოთ, Settings-დან
-  const src = SFX[key];
-  if (!src) return;
+const SFX_COOLDOWN = {
+  click: 60,
+  attach: 90,
+  bomb: 120,
+  fly: 200,
+  gameover: 400
+};
+const lastSfxAt = {};
 
-  const a = src.cloneNode();     // რომ სწრაფად ზედიზედაც ითამაშოს
-  a.volume = src.volume;
-  a.play().catch(() => {});
+function playSfx(key) {
+  if (!soundOn) return;
+  const a = SFX[key];
+  if (!a) return;
+
+  const now = performance.now();
+  const cd = SFX_COOLDOWN[key] ?? 80;
+  if (lastSfxAt[key] && (now - lastSfxAt[key]) < cd) return;
+  lastSfxAt[key] = now;
+
+  try {
+    a.pause();
+    a.currentTime = 0;
+    a.play().catch(() => {});
+  } catch {}
 }
 
 
@@ -154,7 +170,10 @@ function updateDifficulty() {
   // ზედა ზღვარი (რომ “არ გაფრინდეს”)
   fallSpeedMultiplier = Math.min(m, 3.0);
 }
-
+const isMobile = matchMedia("(hover: none) and (pointer: coarse)").matches;
+if (isMobile) {
+  fallSpeedMultiplier = Math.min(fallSpeedMultiplier, 2.2); // იყო 3.0-მდე
+}
 // ფერების სია სახლებიდან (შესაცვლელი იქნება, როცა ყვითელი დაემატება)
 let COLORS = houses.map(h => (h.dataset.color || '').trim().toLowerCase());
 
