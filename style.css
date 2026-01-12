@@ -20,9 +20,9 @@ body.theme-advanced {
   overflow: hidden;
 }
 /* ზედა სათამაშო სივრცე */
-#gameArea {
+#gameArea{
   position: relative;
-  height: 95vh; 
+  height: 100%;
   overflow: hidden;
   z-index: 5;
 }

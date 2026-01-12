@@ -170,15 +170,17 @@ const BOMB_PENALTY   = 2;    // ბომბზე -2 ქულა
 const BALLOON_POINTS = 5;    // სწორ ბუშტზე +5 ქულა
 
 function getSpawnInterval(){
-  if (score >= 400) return 900;
-  if (score >= 200) return 1100;
-  return 1400;
+  if (score >= 400) return 900;   // ძალიან სწრაფი
+  if (score >= 300) return 1000;  // 300+ → გახშირება (200-ზე სწრაფი)
+  if (score >= 200) return 1100;  // 200+ → ახლა რაც გაქვს
+  return 1400;                    // საწყისი
 }
 
 function getBombChance(){
-  if (score >= 400) return 0.45;
+  if (score >= 400) return 0.45;  // უფრო ხშირად ბომბი
+  if (score >= 300) return 0.40;  // 300+ → გახშირება (200-ზე მეტია)
   if (score >= 200) return 0.35;
-  return 0.25; // შენი ახლანდელი
+  return 0.25;
 }
 
 function spawnLoop(){

@@ -1,5 +1,13 @@
 /* ✅ ეს ფაილი არ ეხება დესკტოპს საერთოდ */
 
+html, body{
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;     /* Safari-ს “გაწელვა/scroll” რომ არ ქონდეს */
+  touch-action: none;
+}
+
 .rotate-overlay.hidden{ display:none; }
 
 .rotate-overlay{
@@ -32,7 +40,7 @@
   #mainScreen, #mainMenu{ display:block; }
 }
 #mainScreen{
-  height: 100svh;
+  height: calc(var(--vh, 1vh) * 100);
   width: 100vw;
   overflow: hidden;
   position: relative;
@@ -107,4 +115,48 @@
   /* ✅ mainMenu გამოჩნდეს მხოლოდ როცა hidden არაა */
   #mainMenu.hidden { display: none !important; }
   #mainMenu:not(.hidden) { display: flex !important; } /* შენთან mainMenu flex-ია */
+}
+/* ===== Summary modal: mobile sizing ===== */
+@media (max-width: 320px){
+  .modal{
+    padding: 10px;
+    place-items: center;
+  }
+
+  .modal-card{
+    width: min(180px, 92vw);
+    padding: 16px 14px;
+    border-radius: 20px;
+
+    /* IMPORTANT: do not let it exceed screen height */
+    max-height: calc(var(--vh, 1vh) * 100 - 20px);
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-title{ font-size: 20px; }
+  .modal-text{ font-size: 13px; }
+
+  .big-score{
+    font-size: 30px;
+    margin: 6px 0 10px;
+  }
+
+  .modal-actions{
+    gap: 10px;
+  }
+
+  .btn{
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+
+  /* scoreboard blocks often make modal too tall */
+  .scoreboard{
+    margin: 10px 0 0;
+    padding: 10px;
+    border-radius: 16px;
+    max-height: 150px;
+    overflow: auto;
+  }
 }
