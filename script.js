@@ -20,6 +20,8 @@ const SINGLE_BALLOON_IMAGES = {
   yellow: "./image/ybaloons.png"
 };
 
+
+
 // streak ლოგიკა – ზედიზედ 5 ბუშტზე ერთ სახლზე
 let streakHouseId = null;
 let streakCount   = 0;
@@ -29,8 +31,62 @@ const mainMenu = document.getElementById('mainMenu');
 const startBtn = document.getElementById('startBtn');
 let gameStarted = false;
 
-startBtn.addEventListener('click', startNewGame);
+startBtn.addEventListener('click', () => {
+  unlockAudioOnce();     // ✅ პირველივე კლიკზე გახსნა (iPhone fix)
+  startNewGame();
+});
+// === SFX: Click + Bomb ===
+const SFX = {
+  click: new Audio("./sound/click.wav"),
+  bomb:  new Audio("./sound/boom.wav"),
+  attach: new Audio("./sound/balloonattach.wav"),
+  fly:    new Audio("./sound/housefly.wav"),
+  gameover: new Audio("./sound/gameover.mp3")
+};
+SFX.attach.volume = 0.8;
+SFX.fly.volume    = 0.8; 
+SFX.gameover.volume = 0.8;
 
+SFX.click.volume = 0.8;
+SFX.bomb.volume  = 0.8;
+
+let audioUnlocked = false;
+
+// iOS/Safari unlock
+function unlockAudioOnce() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+
+  SFX.click.play().then(() => {
+    SFX.click.pause();
+    SFX.click.currentTime = 0;
+  }).catch(() => {});
+}
+// 🔊 UNLOCK AUDIO ON FIRST USER INTERACTION (GLOBAL, SAFE)
+document.addEventListener("pointerdown", unlockAudioOnce, { once: true });
+// ✅ CLICK SOUND FOR ALL BUTTONS
+document.addEventListener("click", (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+
+  // Option A: არ ვუკრათ sound toggle-ზე, თორემ switch-ის click ორჯერ “იგრძნობა”
+  if (btn.id === "soundToggle") return;
+
+  // Option B: თუ გინდა ზოგ ღილაკზე არ იყოს ხმა, დაამატე მათ class="no-click-sfx"
+  if (btn.classList.contains("no-click-sfx")) return;
+
+  playSfx("click");
+});
+// play helper (respects soundOn from Settings section)
+function playSfx(key) {
+  if (!soundOn) return;          // soundOn მოდის ქვემოთ, Settings-დან
+  const src = SFX[key];
+  if (!src) return;
+
+  const a = src.cloneNode();     // რომ სწრაფად ზედიზედაც ითამაშოს
+  a.volume = src.volume;
+  a.play().catch(() => {});
+}
 
 
 // ეკრანები
@@ -50,7 +106,9 @@ function updateLivesUI(){
   livesEl.textContent = "❤️".repeat(lives);
 }
 updateLivesUI();
+
 let hasYellowHouse = false;
+
 
 function unlockYellowHouse() {
   const yellowHouse = document.getElementById('house-yellow');
@@ -415,10 +473,16 @@ const BOMB_IMAGES = [
    "./image/greenbomb.png",
   "./image/greybomb.png",
    "./image/blachbomb.png",
-   "./image/redbombred.png"
+   "./image/redbombred.png",
+   "./image/blackbomb.png",
+   "./image/blacklitlebombo.png",
+   "./image/bluredbomb.png",
 ];
 const BOMB_MISS_PENALTY = 3;
+
+
 function attachToRoof(house, color) {
+
   // რამდენი ბუშტი ჰქონდა მანამდე ამ სახლს
   let count = Number(house.dataset.has || 0);
   count++;
@@ -445,6 +509,7 @@ function attachToRoof(house, color) {
   img.draggable = false;
 
   cluster.appendChild(img);
+  playSfx("attach");
 
   // --- განლაგება (ერთნაირად ყველა ბუშტისთვის) ---
   const balloons = [...cluster.querySelectorAll('.bimg')];
@@ -505,6 +570,7 @@ function attachGoldToRoof(house) {
   img.alt = "gold";
   img.draggable = false;
   cluster.appendChild(img);
+  playSfx("attach");
 
   // layout (იგივე პრინციპით როგორც attachToRoof)
   const balloons = [...cluster.querySelectorAll('.bimg')];
@@ -561,6 +627,7 @@ function attachPairToRoof(house, color) {
   img.className = 'b-pair';
   img.draggable = false;
   cluster.appendChild(img);
+  playSfx("attach");
 
   // --- განლაგება ყველა pair-ზე ---
   const pairs = [...cluster.querySelectorAll('.b-pair')];
@@ -595,28 +662,32 @@ function attachPairToRoof(house, color) {
 
 // --- FLY HOUSE ---
 function flyHouse(h) {
-score += 10;
-updateScoreUI();
+  // ✅ guard: ერთ სახლზე ერთდროულად 2-ჯერ არ გაეშვას
+  if (h.dataset.flying === "1") return;
+  h.dataset.flying = "1";
 
- 
-
-  // მერე აფრენა
+  score += 10;
+  updateScoreUI();
+playSfx("fly"); // ✅ house takeoff sound
   h.classList.add('fly');
 
   setTimeout(() => {
     const anchor = h.querySelector('.anchor');
-  if (anchor) {
-  anchor.innerHTML = '';
-  anchor.classList.remove('sway');
-  anchor.dataset.pairsPlaced = "0"; // ✅ ეს დაამატე
-}
+    if (anchor) {
+      anchor.innerHTML = '';
+      anchor.classList.remove('sway');
+      anchor.dataset.pairsPlaced = "0";
+    }
 
     h.dataset.has = '0';
 
     changeHouseSkin(h);
-    // როცა სახლი განახლდება
-   h.dataset.upgraded = "1";
+    h.dataset.upgraded = "1";
+
     h.classList.remove('fly');
+
+    // ✅ unlock
+    h.dataset.flying = "0";
   }, 1500);
 }
 
@@ -681,14 +752,20 @@ function clearFallingItems() {
   gameArea.querySelectorAll('.balloon-img, .balloon-pair, .bomb-img').forEach(el => el.remove());
 }
 
-function gameOver() {
-  gameStarted = false;       // spawnLoop შეწყდება
-  clearFallingItems();
+let gameOverPlayed = false; // ✅ ერთჯერადად
 
-  // აქ აჩვენე ლამაზი Summary
+function gameOver() {
+  if (gameOverPlayed) return;   // ✅ guard
+  gameOverPlayed = true;
+
+  gameStarted = false;
+  playSfx("gameover");          // ✅ აქ
+
+  clearFallingItems();
   openSummary(score);
 }
 function explodeBomb(bomb) {
+   playSfx("bomb"); 
   const rect = bomb.getBoundingClientRect();
   const gameRect = gameArea.getBoundingClientRect();
 
@@ -1042,6 +1119,7 @@ function resetHousesState() {
     h.dataset.has = "0";
     h.dataset.level = "0";
     delete h.dataset.upgraded;
+    delete h.dataset.flying;
 
     // reset classes
     h.classList.remove("fly", "level-1", "level-2");
@@ -1070,6 +1148,7 @@ function startNewGame() {
   missedBombs = 0;
   streakHouseId = null;
   streakCount = 0;
+  gameOverPlayed = false;
 
   updateScoreUI();
   updateLivesUI();

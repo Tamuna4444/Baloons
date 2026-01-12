@@ -758,3 +758,10 @@ body.game-active .top-right-buttons {
 .screen-shake {
   animation: screen-shake 300ms ease;
 }
+/* ✅ Do NOT apply global image effects to falling items */
+.balloon-img img,
+.balloon-pair img,
+.bomb-img img {
+  filter: none !important;
+  box-shadow: none !important;
+}
