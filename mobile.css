@@ -8,37 +8,9 @@ html, body{
   touch-action: none;
 }
 
-.rotate-overlay.hidden{ display:none; }
 
-.rotate-overlay{
-  position: fixed;
-  inset: 0;
-  z-index: 99999;
-  display: grid;
-  place-items: center;
-  background: rgba(0,0,0,0.45);
-  backdrop-filter: blur(6px);
-}
 
-.rotate-card{
-  width: min(92vw, 420px);
-  padding: 18px;
-  border-radius: 18px;
-  background: rgba(255, 248, 230, 0.95);
-  box-shadow: 0 18px 40px rgba(0,0,0,0.45);
-  text-align: center;
-  color: #4a3a1a;
-}
 
-@media (orientation: portrait) {
-  #rotateOverlay{ display:grid; }
-  #mainScreen, #mainMenu{ display:none !important; }
-}
-
-@media (orientation: landscape) {
-  #rotateOverlay{ display:none; }
-  #mainScreen, #mainMenu{ display:block; }
-}
 #mainScreen{
   height: calc(var(--vh, 1vh) * 100);
   width: 100vw;
@@ -160,7 +132,7 @@ html, body{
 /* ===== MOBILE: smaller houses + tighter spacing ===== */
 @media (hover: none) and (pointer: coarse) {
   .street{
-    gap: 34px;            /* იყო 80px style.css-ში */
+    gap: 20px;            /* იყო 80px style.css-ში */
     bottom: 6px;
   }
 
@@ -181,27 +153,37 @@ html, body{
 }
 @media (orientation: landscape) and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
 
-  html, body{
-    height: 100%;
-    overflow: hidden;
+
+  /* ⬇️ reduce game area height on mobile */
+  #gameArea {
+    height: 72%;
   }
 
-  /* ფანჯარა მოერგოს ლენდსქეიპის დაბალ სიმაღლეს */
-  .game-window{
-    height: calc(var(--vh) - 16px) !important;
-    max-height: calc(var(--vh) - 16px) !important;
-
-    margin: 8px auto !important;
-    padding: 14px 12px 14px !important;
+  /* ⬆️ ensure street stays visible */
+  .street {
+    bottom: 4px;
   }
 
-  /* შიგნით თუ რამე მეტია, სკროლი დაეშვას შიგნით */
-  .window-body{
-    overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
 }
+/* ✅ PORTRAIT MOBILE: houses must fit in one row */
+@media (orientation: portrait) and (hover: none) and (pointer: coarse) {
+  .street{
+    left: 0;
+    right: 0;
+    bottom: max(6px, env(safe-area-inset-bottom));
+    padding: 0 10px;
+    justify-content: space-between;  /* უკეთ ეწყობა 4 ელემენტს */
+    gap: 8px;                         /* პატარა gap */
+  }
 
-input, button {
-    font-size: 16px !important;
+  /* მთავარი ფიქსი — აღარ იყოს 190px */
+  .house img{
+    width: clamp(72px, 21vw, 108px);  /* 4 სახლს კომფორტულად ატევს */
+    height: auto;
+  }
+
+  /* შენარჩუნება: level scale-ები შეიძლება დარჩეს, მაგრამ ოდნავ დავუწიოთ */
+  .house.level-0 .house-inner { transform: scale(0.92); }
+  .house.level-1 .house-inner { transform: scale(0.98); }
+  .house.level-2 .house-inner { transform: scale(1.05); }
 }
