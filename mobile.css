@@ -179,3 +179,29 @@ html, body{
     top: 18px;   /* ოდნავ მაღლა, რომ დამიზნება გაიოლდეს */
   }
 }
+@media (orientation: landscape) and (max-width: 1024px) and (hover: none) and (pointer: coarse) {
+
+  html, body{
+    height: 100%;
+    overflow: hidden;
+  }
+
+  /* ფანჯარა მოერგოს ლენდსქეიპის დაბალ სიმაღლეს */
+  .game-window{
+    height: calc(var(--vh) - 16px) !important;
+    max-height: calc(var(--vh) - 16px) !important;
+
+    margin: 8px auto !important;
+    padding: 14px 12px 14px !important;
+  }
+
+  /* შიგნით თუ რამე მეტია, სკროლი დაეშვას შიგნით */
+  .window-body{
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+}
+
+input, button {
+    font-size: 16px !important;
+}

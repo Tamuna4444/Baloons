@@ -765,3 +765,9 @@ body.game-active .top-right-buttons {
   filter: none !important;
   box-shadow: none !important;
 }
+.explosion {
+  position: absolute;
+  width: 64px;
+  height: 64px;
+  pointer-events: none;
+}

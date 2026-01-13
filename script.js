@@ -338,7 +338,11 @@ function fall(balloon) {
   return;
 }
 
- if (y > gameArea.getBoundingClientRect().height + 120) {
+const groundY =
+  gameArea.getBoundingClientRect().height -
+  (window.innerHeight * 0.12);
+
+if (y > groundY) {
 
   // 💣 ბომბი თუ არ აფეთქდა და მიწას დაეცა -> -1 სიცოცხლე
   if (balloon.dataset.type === "bomb" && balloon.dataset.exploded !== "1") {
@@ -1483,4 +1487,3 @@ if (window.YaGames && typeof YaGames.init === "function") {
 } else {
   applyLanguage("ru");
 }
-   
