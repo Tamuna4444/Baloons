@@ -187,3 +187,4 @@ html, body{
   .house.level-1 .house-inner { transform: scale(0.98); }
   .house.level-2 .house-inner { transform: scale(1.05); }
 }
+body { outline: 6px solid red !important; }
