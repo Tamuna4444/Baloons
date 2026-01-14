@@ -5,7 +5,7 @@ const HOUSE_SKINS = {
   green: ["./image/greenh.png", "./image/biggreen.png","./image/biggreenhouse.png"],
   yellow:["./image/yellow.png","./image/bluehdouble.png", "./image/bigyellowhouse.png"],
 };
-const HOUSE_NEED = 5;       // 15 ბუშტზე აფრინდეს სახლი
+const HOUSE_NEED = 6;       // 15 ბუშტზე აფრინდეს სახლი
 
 const HOUSE_BALLOON_PAIRS = {
   green: "./image/blgreenyellow.png",
@@ -19,7 +19,17 @@ const SINGLE_BALLOON_IMAGES = {
   green:  "./image/greenbaloons.png",
   yellow: "./image/ybaloons.png"
 };
-
+const BOMB_IMAGES = [
+  "./image/redbomb.png",
+   "./image/bluebomb.png",
+   "./image/greenbomb.png",
+  "./image/greybomb.png",
+   "./image/blachbomb.png",
+   "./image/redbombred.png",
+   "./image/blackbomb.png",
+   "./image/blacklitlebombo.png",
+   "./image/bluredbomb.png",
+];
 
 
 // streak ლოგიკა – ზედიზედ 5 ბუშტზე ერთ სახლზე
@@ -31,9 +41,10 @@ const mainMenu = document.getElementById('mainMenu');
 const startBtn = document.getElementById('startBtn');
 let gameStarted = false;
 
-startBtn.addEventListener('click', () => {
-  unlockAudioOnce();     // ✅ პირველივე კლიკზე გახსნა (iPhone fix)
-  startNewGame();
+startBtn.addEventListener('click', async () => {
+  unlockAudioOnce();     // ✅ iPhone fix
+  await showFullscreenAd(); // ✅ Start-ზე რეკლამა
+  startNewGame();        // ✅ მერე დაიწყოს თამაში
 });
 // === SFX: Click + Bomb ===
 const SFX = {
@@ -126,12 +137,7 @@ updateLivesUI();
 let hasYellowHouse = false;
 
 
-function unlockYellowHouse() {
-  const yellowHouse = document.getElementById('house-yellow');
-  if (!yellowHouse) return;
 
-  yellowHouse.classList.remove('hidden');
-}
 
 
 function updateScoreUI() {
@@ -166,16 +172,19 @@ function updateDifficulty() {
   // 🎯 ქულის მიხედვით: 200+ ქულაზე აშკარა აჩქარება
   if (score >= 200) m += 0.55;
   if (score >= 400) m += 0.35;
+  if (score >= 500) m += 0.35; // ✅ 500+ – დამატებით აჩქარება
 
   // ზედა ზღვარი (რომ “არ გაფრინდეს”)
-  fallSpeedMultiplier = Math.min(m, 3.0);
+  fallSpeedMultiplier = Math.min(m, 3.3);
 }
 const isMobile = matchMedia("(hover: none) and (pointer: coarse)").matches;
 if (isMobile) {
   fallSpeedMultiplier = Math.min(fallSpeedMultiplier, 2.2); // იყო 3.0-მდე
 }
 // ფერების სია სახლებიდან (შესაცვლელი იქნება, როცა ყვითელი დაემატება)
-let COLORS = houses.map(h => (h.dataset.color || '').trim().toLowerCase());
+let COLORS = houses
+  .filter(h => !h.classList.contains("hidden"))
+  .map(h => (h.dataset.color || "").trim().toLowerCase());
 
 
 const GOLD_BALLOON_IMAGE = "./image/goldballoon.png";
@@ -189,15 +198,17 @@ const BOMB_PENALTY   = 2;    // ბომბზე -2 ქულა
 const BALLOON_POINTS = 5;    // სწორ ბუშტზე +5 ქულა
 
 function getSpawnInterval(){
-  if (score >= 400) return 900;   // ძალიან სწრაფი
-  if (score >= 300) return 1000;  // 300+ → გახშირება (200-ზე სწრაფი)
-  if (score >= 200) return 1100;  // 200+ → ახლა რაც გაქვს
-  return 1400;                    // საწყისი
+  if (score >= 500) return 780;   // ✅ 500+ ძალიან სწრაფი
+  if (score >= 400) return 900;
+  if (score >= 300) return 1000;
+  if (score >= 200) return 1100;
+  return 1400;
 }
 
 function getBombChance(){
-  if (score >= 400) return 0.45;  // უფრო ხშირად ბომბი
-  if (score >= 300) return 0.40;  // 300+ → გახშირება (200-ზე მეტია)
+  if (score >= 500) return 0.52;  // ✅ 500+ უფრო ხშირად ბომბი
+  if (score >= 400) return 0.45;
+  if (score >= 300) return 0.40;
   if (score >= 200) return 0.35;
   return 0.25;
 }
@@ -247,16 +258,27 @@ el.addEventListener("pointerdown", (e) => {
   // ✅ GOLD first (არ იყოს დამოკიდებული upgradedHouses-ზე)
 const now = Date.now();
 
+const goldChance =
+  lives === 1 ? GOLD_BASE_CHANCE * 2 :   // როცა 1 სიცოცხლეა — ოდნავ მეტი შანსი
+  lives === 2 ? GOLD_BASE_CHANCE :       // როცა 2 სიცოცხლეა — საბაზო შანსი
+  0;                                     // როცა 3 ან 0 — არ გვინდა
+const effectiveGoldCooldown =
+  lives === 1 ? 4000 : GOLD_COOLDOWN_MS;
+
 const spawnGold =
   score >= 30 &&
-  lives < 3 &&
-  (now - lastGoldTime) > GOLD_COOLDOWN_MS &&
-  Math.random() < GOLD_BASE_CHANCE;
+  (now - lastGoldTime) > effectiveGoldCooldown &&
+  Math.random() < goldChance;
+
 
 if (spawnGold) lastGoldTime = now;
 
+
+// ⬅️ ძალიან მნიშვნელოვანია
+
+
 if (spawnGold) {
-  el.className = "balloon-img gold";
+ el.className = "balloon-img gold gold-balloon";
   el.dataset.type = "gold";
   el.dataset.color = "gold";
 
@@ -338,11 +360,38 @@ function fall(balloon) {
   return;
 }
 
-const groundY =
-  gameArea.getBoundingClientRect().height -
-  (window.innerHeight * 0.12);
+const streetEl = document.getElementById("street");
+const gameRect = gameArea.getBoundingClientRect();
+
+let groundY = gameRect.height - 40; // fallback თუ street ვერ მოიძებნა
+
+if (streetEl) {
+  const streetTop = streetEl.getBoundingClientRect().top;
+  groundY = (streetTop - gameRect.top) +10; // -20 = პატარა ბუფერი
+}
 
 if (y > groundY) {
+  if (y > groundY) {
+
+  // 💣 bomb missed → lose life
+  if (balloon.dataset.type === "bomb" && balloon.dataset.exploded !== "1") {
+    missedBombs++;
+    lives = Math.max(0, lives - 1);
+    updateLivesUI();
+    if (lives <= 0) gameOver();
+  }
+
+  // 🎈 any non-bomb missed → pop effect
+  if (balloon.dataset.type !== "bomb") {
+    popBalloonMidAir(balloon);
+    alive = false;
+    return;
+  }
+
+  alive = false;
+  balloon.remove();
+  return;
+}
 
   // 💣 ბომბი თუ არ აფეთქდა და მიწას დაეცა -> -1 სიცოცხლე
   if (balloon.dataset.type === "bomb" && balloon.dataset.exploded !== "1") {
@@ -446,39 +495,6 @@ if (houseColor === color) {
   return true;
 
 
-    // ჩვეულებრივი ქულა თითო ბუშტზე
-   score += BALLOON_POINTS; // +5
-
-    // streak – ზედიზედ 5 ბუშტი ერთ სახლზე
-    const id = targetHouse.id;
-    if (streakHouseId === id) {
-      streakCount++;
-    } else {
-      streakHouseId = id;
-      streakCount   = 1;
-    }
-
-    if (streakCount === STREAK_TARGET) {
-      // 🎁 ბონუს ქულა
-      score += STREAK_BONUS;
-      streakCount = 0; // რომ ისევ შეძლოს 5-ის შეკრება და ბონუსი
-
-      // სურვილისამებრ: პატარა ანიმაცია სახლზე
-      targetHouse.classList.add('house-bonus');
-      setTimeout(() => targetHouse.classList.remove('house-bonus'), 400);
-    }
-
-   updateScoreUI();
-
-    // რამდენი ბუშტი აქვს უკვე ამ სახლს
-    const has  = +targetHouse.dataset.has || 0;
-    const need = HOUSE_NEED;
-
-    // თუ უკვე 15 ბუშტი აქვს – აფრინდება
-    if (has >= need) {
-      flyHouse(targetHouse);
-    }
-
   } else {
     // ❌ არასწორი სახლთან მოხვდა – ქულა იკლებს
     score = Math.max(0, score - 1);
@@ -492,17 +508,7 @@ if (houseColor === color) {
   // ნებისმიერ შემთხვევაში ბუშტი დამუშავებულია
   return true;
 }
-const BOMB_IMAGES = [
-  "./image/redbomb.png",
-   "./image/bluebomb.png",
-   "./image/greenbomb.png",
-  "./image/greybomb.png",
-   "./image/blachbomb.png",
-   "./image/redbombred.png",
-   "./image/blackbomb.png",
-   "./image/blacklitlebombo.png",
-   "./image/bluredbomb.png",
-];
+
 const BOMB_MISS_PENALTY = 3;
 
 
@@ -747,30 +753,16 @@ function enableDragX(el) {
     window.addEventListener('pointerup', up, { once: true });
   });
 }
-
-
 function unlockYellowHouse() {
-  const street = document.getElementById('street');
-  if (!street) return;
+  const yellowHouse = document.getElementById("house-yellow");
+  if (!yellowHouse) return;
 
-  const h = document.createElement('div');
-  h.id = 'house-yellow';
-  h.className = 'house';
-  h.dataset.color = 'yellow';
-  h.dataset.need  = '5';
-  h.dataset.has   = '0';
+  // ✅ უბრალოდ გახსნა (არავითარი createElement!)
+  yellowHouse.classList.remove("hidden");
+  yellowHouse.classList.add("level-0");
 
-  // დროებით greenh.png-ს გამოვიყენებთ – როცა დახატავ yellowh.png-ს, აქ შეცვლი
-  h.innerHTML = `
-    <img src="./image/yellow.png" alt="Yellow House" />
-    <div class="anchor"></div>
-  `;
-
-  street.appendChild(h);
-
-  // ახალი სახლი გამოიყენოს თამაშმაც
-  houses.push(h);
-  COLORS.push('yellow');
+  // ✅ spawn pool-ში "yellow" დაამატე მხოლოდ unlock-ის შემდეგ
+  if (!COLORS.includes("yellow")) COLORS.push("yellow");
 }
 function clearFallingItems() {
   // შენს რეალურ კლასებს ვასუფთავებთ
@@ -778,6 +770,15 @@ function clearFallingItems() {
 }
 
 let gameOverPlayed = false; // ✅ ერთჯერადად
+
+// ✅ Yellow house reset for new run
+hasYellowHouse = false;
+
+const yh = document.getElementById("house-yellow");
+if (yh) yh.classList.add("hidden");
+
+// ✅ optional but recommended: do not spawn yellow items before unlock
+COLORS = COLORS.filter(c => c !== "yellow");
 
 function gameOver() {
   if (gameOverPlayed) return;   // ✅ guard
@@ -965,31 +966,32 @@ summaryModal.addEventListener("click", (e) => {
 
 summaryCloseBtn.addEventListener("click", () => {
   closeSummary();
-  stopGame();                       // ✅ გაჩერება
-  mainMenu.classList.remove('hidden'); // ✅ Start ეკრანი
-});
+  stopGame();
 
-// --- Yandex Fullscreen Ad helper ---
-async function showFullscreenAd() {
-  if (!window.ysdk || !ysdk.adv || typeof ysdk.adv.showFullscreenAdv !== "function") {
-    // SDK არ არის ან ad API არ მუშაობს
-    return { ok: false, reason: "SDK not ready" };
+  // ✅ hide yellow + remove from spawn pool
+  hasYellowHouse = false;
+  const yh = document.getElementById("house-yellow");
+  if (yh) yh.classList.add("hidden");
+  COLORS = COLORS.filter(c => c !== "yellow");
+
+  mainMenu.classList.remove('hidden');
+});
+function showFullscreenAd() {
+  if (!ysdk?.adv?.showFullscreenAdv) {
+    return Promise.resolve({ ok: false, reason: "SDK not ready" });
   }
 
-  try {
-    await ysdk.adv.showFullscreenAdv({
+  return new Promise((resolve) => {
+    ysdk.adv.showFullscreenAdv({
       callbacks: {
         onOpen: () => console.log("Ad open"),
-        onClose: () => console.log("Ad close"),
-        onError: (e) => console.log("Ad error", e)
+        onClose: () => resolve({ ok: true }),
+        onError: (e) => resolve({ ok: false, reason: String(e || "ad error") })
       }
     });
-    return { ok: true };
-  } catch (e) {
-    console.log("Fullscreen ad failed:", e);
-    return { ok: false, reason: "ad failed" };
-  }
+  });
 }
+
 
 // Restart game — Watch Ad
 summaryRestartAdBtn.addEventListener("click", async () => {
@@ -1007,7 +1009,7 @@ summaryRestartAdBtn.addEventListener("click", async () => {
 
   // 2) აქ ჩასვი შენი რეალური restart logic:
   // resetAllState(); showMainMenu(); startGame();
-  restartGameToStart(); // <-- ამ ფუნქციას ქვემოთ მოგცემ შაბლონად
+  continueAfterAd(); // <-- ამ ფუნქციას ქვემოთ მოგცემ შაბლონად
 
   summaryRestartAdBtn.disabled = false;
 });
@@ -1017,6 +1019,16 @@ function restartGameToStart() {
   missedBombs = 0;
   updateScoreUI();
   updateLivesUI();
+  // ✅ Yellow house reset for restart run
+hasYellowHouse = false;
+
+const yh = document.getElementById("house-yellow");
+if (yh) yh.classList.add("hidden");
+
+COLORS = COLORS.filter(c => c !== "yellow");
+
+// ✅ also reset houses visuals/state (highly recommended)
+resetHousesState();
 
   // გაწმენდა
   gameArea.querySelectorAll('.balloon-img, .balloon-pair, .bomb-img').forEach(el => el.remove());
@@ -1027,6 +1039,29 @@ function restartGameToStart() {
   spawnLoop();
 }
 const SCOREBOARD_KEY = "balloons_top_scores_v1";
+
+function continueAfterAd() {
+  // ✅ ქულა არ იცვლება
+  // score = score;
+
+  // ✅ სიცოცხლეები აღდგეს (აირჩიე როგორ გინდა: 1 ან 3)
+  lives = 3;
+  missedBombs = 0;
+
+  // ✅ აუცილებელია, თორემ შემდეგი gameOver აღარ გაეშვება
+  gameOverPlayed = false;
+
+  updateLivesUI();
+  updateScoreUI();
+
+  // ✅ გაწმენდა (რომ ძველი ბუშტები/ბომბები აღარ დარჩეს)
+  gameArea.querySelectorAll('.balloon-img, .balloon-pair, .bomb-img').forEach(el => el.remove());
+
+  // ✅ თავიდან ჩართე სპაუნის ციკლი ისე, რომ დუბლირება არ მოხდეს
+  clearTimeout(spawnTimerId);
+  gameStarted = true;
+  spawnLoop();
+}
 
 function loadScores() {
   let list = [];
@@ -1043,7 +1078,7 @@ function loadScores() {
     .map(x => ({
       score: x.score,
       date: typeof x.date === "number" ? x.date : Date.now(),
-      name: (typeof x.name === "string" && x.name.trim()) ? x.name.trim() : "Player"
+     name: (typeof x.name === "string" && x.name.trim()) ? x.name.trim() : "Игрок"
     }));
 
   return list;
@@ -1089,16 +1124,15 @@ function renderScoreboard(list, currentScore) {
   if (!box) return;
 
   let youUsed = false;
+  const dict = translations[currentLang] || translations.en;
 
   box.innerHTML = list.map((item, i) => {
-    // ✅ თუ ძველი ჩანაწერია და name არ აქვს → "Player"
     let name = (item && typeof item.name === "string" && item.name.trim())
       ? item.name.trim()
-      : "Player";
+      : dict.playerLabel;
 
-    // ✅ მხოლოდ ერთი "You" — მიმდინარე შედეგზე
     if (!youUsed && item.score === currentScore) {
-      name = "You";
+      name = dict.youLabel;
       youUsed = true;
     }
 
@@ -1110,10 +1144,11 @@ function renderScoreboard(list, currentScore) {
       </div>
     `;
   }).join("");
-
-
-
 }
+
+
+
+
 
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, (m) => ({
@@ -1224,7 +1259,10 @@ const translations = {
     yourScore: "Your score:",
     restartAd: "Restart game — Watch Ad",
     topScores: "Top scores",
-    score: "Score"
+    score: "Score",
+    youLabel: "You",
+    playerLabel: "Player",
+    bestResults: "Best results"
   },
   ru: {
     start: "Начать",
@@ -1236,7 +1274,10 @@ const translations = {
     yourScore: "Ваш счёт:",
     restartAd: "Перезапустить — Смотреть рекламу",
     topScores: "Лучшие результаты",
-    score: "Счёт"
+    score: "Счёт", 
+     youLabel: "Вы",
+    playerLabel: "Игрок",
+    bestResults: "Лучшие результаты"
   }
 };
 
@@ -1340,23 +1381,23 @@ updateSoundUI();
 let ysdk = null;
 
 // === YANDEX LEADERBOARD (server-side) ===
-const YANDEX_LB_NAME = "balloons_main";
+const YANDEX_LB_NAME = "balloonsscore";
 
 let yLb = null; // leaderboards instance (depends on SDK version)
 
 async function initYandexLeaderboards() {
   if (!ysdk) return null;
 
+  // ✅ Preferred (new) API: ysdk.leaderboards
+  if (ysdk.leaderboards) {
+    yLb = ysdk.leaderboards;
+    return yLb;
+  }
+
+  // ⚠️ Legacy fallback (deprecated, but keep just in case)
   try {
-    // Newer SDK style
     if (typeof ysdk.getLeaderboards === "function") {
       yLb = await ysdk.getLeaderboards();
-      return yLb;
-    }
-
-    // Older style fallback (some builds expose ysdk.leaderboards)
-    if (ysdk.leaderboards) {
-      yLb = ysdk.leaderboards;
       return yLb;
     }
   } catch (e) {
@@ -1372,23 +1413,32 @@ async function submitScoreToYandex(scoreValue) {
   if (!Number.isFinite(scoreValue)) return false;
 
   const s = Math.max(0, Math.floor(scoreValue));
+
+  // ✅ check availability (often depends on user auth)
+  try {
+    if (typeof ysdk.isAvailableMethod === "function") {
+      const ok = await ysdk.isAvailableMethod("leaderboards.setScore");
+      if (!ok) return false;
+    }
+  } catch (e) {
+    // if check fails, don't block the game
+    console.log("isAvailableMethod check failed:", e);
+    return false;
+  }
+
   if (!yLb) await initYandexLeaderboards();
   if (!yLb) return false;
 
   try {
-    // Two possible API shapes:
-    if (typeof yLb.setLeaderboardScore === "function") {
-      await yLb.setLeaderboardScore(YANDEX_LB_NAME, s);
-      return true;
-    }
+    // ✅ New API
     if (typeof yLb.setScore === "function") {
       await yLb.setScore(YANDEX_LB_NAME, s);
       return true;
     }
 
-    // If SDK uses direct method names
-    if (typeof yLb.setScore === "function") {
-      await yLb.setScore(YANDEX_LB_NAME, s);
+    // Legacy API
+    if (typeof yLb.setLeaderboardScore === "function") {
+      await yLb.setLeaderboardScore(YANDEX_LB_NAME, s);
       return true;
     }
   } catch (e) {
@@ -1401,28 +1451,36 @@ async function submitScoreToYandex(scoreValue) {
 async function fetchTopFromYandex(limit = 5) {
   if (!ysdk) return null;
 
+  try {
+    if (typeof ysdk.isAvailableMethod === "function") {
+      const ok = await ysdk.isAvailableMethod("leaderboards.getEntries");
+      if (!ok) return null;
+    }
+  } catch (e) {
+    console.log("isAvailableMethod check failed:", e);
+    return null;
+  }
+
   if (!yLb) await initYandexLeaderboards();
   if (!yLb) return null;
 
   try {
-    // Newer API
-    if (typeof yLb.getLeaderboardEntries === "function") {
-      const res = await yLb.getLeaderboardEntries(YANDEX_LB_NAME, {
+    // ✅ New API
+    if (typeof yLb.getEntries === "function") {
+      return await yLb.getEntries(YANDEX_LB_NAME, {
         quantityTop: limit,
         includeUser: true,
         quantityAround: 0
       });
-      return res;
     }
 
-    // Older API
-    if (typeof yLb.getEntries === "function") {
-      const res = await yLb.getEntries(YANDEX_LB_NAME, {
+    // Legacy API
+    if (typeof yLb.getLeaderboardEntries === "function") {
+      return await yLb.getLeaderboardEntries(YANDEX_LB_NAME, {
         quantityTop: limit,
         includeUser: true,
         quantityAround: 0
       });
-      return res;
     }
   } catch (e) {
     console.log("Fetch leaderboard failed:", e);
@@ -1436,9 +1494,8 @@ function normalizeYandexEntries(res) {
   if (!res || !Array.isArray(res.entries)) return [];
 
   return res.entries.map((e) => {
-    const name =
-      (e.player && (e.player.publicName || e.player.name)) ||
-      "Player";
+const dict = translations[currentLang] || translations.en;
+const name = (e.player && (e.player.publicName || e.player.name)) || dict.playerLabel;
 
     const scoreVal =
       (e.score && (e.score.value ?? e.score)) ??
@@ -1458,7 +1515,8 @@ function renderYandexScoreboard(entries, currentScore) {
 
   box.innerHTML = entries.slice(0, 5).map((item, i) => {
     // "You" თუ ამ ქულას დაემთხვა (უბრალო UX)
-    const labelName = (item.score === currentScore) ? "You" : item.name;
+const dict = translations[currentLang] || translations.en;
+const labelName = (item.score === currentScore) ? dict.youLabel : item.name;
 
     return `
       <div class="scoreboard-row">
@@ -1479,6 +1537,11 @@ if (window.YaGames && typeof YaGames.init === "function") {
 
     // ✅ აქ უნდა იყოს
     initYandexLeaderboards();
+    try {
+  ysdk.features?.LoadingAPI?.ready();
+} catch (e) {
+  console.log("LoadingAPI.ready error:", e);
+}
 
   }).catch((e) => {
     console.log("Yandex SDK init error:", e);

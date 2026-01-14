@@ -765,9 +765,52 @@ body.game-active .top-right-buttons {
   filter: none !important;
   box-shadow: none !important;
 }
-.explosion {
-  position: absolute;
-  width: 64px;
-  height: 64px;
-  pointer-events: none;
+/* 🎈 Balloon pop effect */
+.balloon-pop{
+  position:absolute;
+  width:110px;
+  height:110px;
+  border-radius:50%;
+  pointer-events:none;
+  z-index:50;
+  background: radial-gradient(circle,
+    rgba(255,255,255,.9) 0%,
+    rgba(255,220,140,.9) 30%,
+    rgba(255,120,180,.55) 55%,
+    transparent 70%
+  );
+  animation: balloon-pop 420ms ease-out forwards;
+}
+
+@keyframes balloon-pop{
+  0%   { transform: scale(.2); opacity:.85; }
+  60%  { transform: scale(1.2); opacity:1; }
+  100% { transform: scale(1.6); opacity:0; }
+}
+/* ❌ disable drag highlight / selection overlay */
+.balloon-img,
+.balloon-img img,
+.balloon-pair,
+.balloon-pair img,
+.bomb-img,
+.bomb-img img {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
+  touch-action: none;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* ❌ dragging state must not show any overlay */
+.balloon-img.dragging,
+.balloon-pair.dragging {
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+.gold-balloon {
+  transform: scale(1.25);
+  z-index: 5;
 }
