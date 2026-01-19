@@ -187,3 +187,17 @@ html, body{
   .house.level-1 .house-inner { transform: scale(0.98); }
   .house.level-2 .house-inner { transform: scale(1.05); }
 }
+/* ✅ Yandex 1.6.1.8 — iOS/Android: disable selection + callout everywhere in game UI */
+#mainMenu, #mainScreen, #gameArea,
+button, .modal, .modal-card, .scoreboard, #score, #lives {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+
+* {
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}

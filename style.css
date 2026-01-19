@@ -5,6 +5,20 @@ html, body {
   margin: 0;
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
+/* ✅ Yandex 1.6.2.7 — disable selection + callout + highlight in game */
+html, body, #mainScreen, #gameArea {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+  @supports (height: 100dvh){
+  #mainScreen{ height: 100dvh; }
+}
+
 body {
   background: url(./image/image.png) no-repeat center center / cover;
 }
@@ -96,16 +110,17 @@ body.theme-advanced {
 .bomb.yellow{ background:#ffd34d; }
 /* ქულები */
 #score {
-  position: absolute; top: 14px; left: 14px;
-  padding: 6px 10px; border-radius: 10px;
+  position: absolute;
+  top: max(14px, env(safe-area-inset-top));
+  left: max(14px, env(safe-area-inset-left));
+  padding: 6px 10px;
+  border-radius: 10px;
   background: #ffeb99;
   font-weight: 700;
-    box-shadow:
+  box-shadow:
     0 10px 24px rgba(0,0,0,0.25),
     inset 0 1px 0 rgba(255,255,255,0.6);
-
   backdrop-filter: blur(6px);
-
 }
 .start-button:active{
   transform: translateY(3px);
@@ -115,8 +130,8 @@ body.theme-advanced {
 }
 #lives{
   position: absolute;
-  top: 54px;          /* score-ის ქვემოთ */
-  left: 14px;         /* იგივე ხაზზე რაც score */
+  top: calc(max(14px, env(safe-area-inset-top)) + 40px);
+  left: max(14px, env(safe-area-inset-left));
   padding: 6px 10px;
   border-radius: 10px;
   background:#ffeb99;
@@ -813,4 +828,30 @@ body.game-active .top-right-buttons {
 .gold-balloon {
   transform: scale(1.25);
   z-index: 5;
+}
+/* ✅ Yandex 1.10.1 — keep houses inside screen on small widths (desktop + tablets) */
+@media (max-width: 980px){
+  .street{
+    left: 0;
+    right: 0;
+    padding: 0 12px;
+    gap: clamp(10px, 3vw, 30px);
+    justify-content: space-between;
+  }
+
+  .house img{
+    width: clamp(90px, 16vw, 150px);
+    height: auto;
+  }
+}
+
+/* even smaller widths */
+@media (max-width: 520px){
+  .street{
+    gap: 8px;
+    padding: 0 10px;
+  }
+  .house img{
+    width: clamp(72px, 22vw, 110px);
+  }
 }

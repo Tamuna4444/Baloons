@@ -1,3 +1,21 @@
+// ✅ Yandex 1.6.2.7 — block browser context menu and text selection inside the game
+(function blockBrowserUI() {
+  // 1) Right click menu
+  document.addEventListener("contextmenu", (e) => {
+    e.preventDefault();
+  }, { capture: true });
+
+  // 2) Prevent text selection via dragging
+  document.addEventListener("selectstart", (e) => {
+    e.preventDefault();
+  }, { capture: true });
+
+  // 3) Optional: prevent middle-click autoscroll (some browsers)
+  document.addEventListener("auxclick", (e) => {
+    // middle button = 1
+    if (e.button === 1) e.preventDefault();
+  }, { capture: true });
+})();
 
 const HOUSE_SKINS = {
   red:   ["./image/redh.png",   "./image/bigred.png",  "./image/bigredhouse.png"],
@@ -97,9 +115,30 @@ const SFX_COOLDOWN = {
   gameover: 400
 };
 const lastSfxAt = {};
+// ✅ Yandex 4.7 — mute/pause game audio while ads are shown
+let adIsOpen = false;
+
+function pauseAudioForAd() {
+  adIsOpen = true;
+  try {
+    Object.values(SFX).forEach(a => {
+      if (!a) return;
+      a.pause();
+      // currentTime არ ვცვლით, რომ iOS-ზე არ “გაიჭედოს”
+    });
+  } catch {}
+}
+
+function resumeAudioAfterAd() {
+  adIsOpen = false;
+  // SFX-სთვის არაფერი გასაგრძელებელია (ქულაზე/კლიკზე ისედაც ხელახლა ითამაშებს)
+  // თუ ოდესმე დაამატებ background music-ს — აქ გააგრძელებ play()-ს.
+}
+
 
 function playSfx(key) {
   if (!soundOn) return;
+  if (adIsOpen) return;   // ✅ during ads no SFX
   const a = SFX[key];
   if (!a) return;
 
@@ -125,12 +164,119 @@ let   houses   = [...document.querySelectorAll('.house')];
 const scoreEl  = document.getElementById('score');
 let score = 0;
 const livesEl = document.getElementById("lives");
-let lives = 3;          // start lives
+let lives = 3;
+// ===============================
+// ✅ Yandex p.1.9 — Progress Save/Load
+// ===============================
+const PROGRESS_KEY = "balloons_progress_v1";
+let saveTimer = null;
+
+function getProgressSnapshot() {
+  return {
+    v: 1,
+    ts: Date.now(),
+    gameStarted: !!gameStarted,
+    score: score | 0,
+    lives: lives | 0,
+    missedBombs: missedBombs | 0,
+    hasYellowHouse: !!hasYellowHouse,
+
+    houses: houses.map(h => ({
+      id: h.id,
+      color: (h.dataset.color || "").trim(),
+      has: +(h.dataset.has || 0),
+      need: +(h.dataset.need || 0),
+      level: +(h.dataset.level || 0),
+      upgraded: h.dataset.upgraded === "1",
+      hidden: h.classList.contains("hidden")
+    }))
+  };
+}
+
+function applyProgressSnapshot(p) {
+  if (!p || p.v !== 1) return;
+
+  // primitive state
+  score = p.score | 0;
+  lives = Math.max(0, p.lives | 0);
+  missedBombs = p.missedBombs | 0;
+  hasYellowHouse = !!p.hasYellowHouse;
+
+  // restore houses
+  if (Array.isArray(p.houses)) {
+    p.houses.forEach(ph => {
+      const h = document.getElementById(ph.id);
+      if (!h) return;
+
+      h.dataset.has = String(ph.has ?? 0);
+      if (ph.need != null) h.dataset.need = String(ph.need);
+      h.dataset.level = String(ph.level ?? 0);
+
+      if (ph.upgraded) h.dataset.upgraded = "1";
+      else delete h.dataset.upgraded;
+
+      // hidden (yellow unlock etc)
+      h.classList.toggle("hidden", !!ph.hidden);
+
+      // level classes
+      h.classList.remove("level-0", "level-1", "level-2");
+      h.classList.add(`level-${Math.max(0, Math.min(2, ph.level || 0))}`);
+
+      // image skin by level
+      const color = (h.dataset.color || "").trim().toLowerCase();
+      const img = h.querySelector("img");
+      if (img && HOUSE_SKINS[color]) {
+        img.src = HOUSE_SKINS[color][Math.max(0, Math.min(2, ph.level || 0))];
+      }
+    });
+  }
+
+  // refresh COLORS pool after possible yellow unlock/visibility change
+  COLORS = houses
+    .filter(h => !h.classList.contains("hidden"))
+    .map(h => (h.dataset.color || "").trim().toLowerCase());
+
+  // UI
+  updateLivesUI();
+  updateScoreUI();
+}
+
+function saveProgressNow() {
+  try {
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(getProgressSnapshot()));
+  } catch (e) {
+    console.log("saveProgress error:", e);
+  }
+}
+
+function scheduleSaveProgress() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveProgressNow, 200);
+}
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch (e) {
+    console.log("loadProgress error:", e);
+    return null;
+  }
+}
+
+// save on tab hide / refresh (important for iOS)
+window.addEventListener("beforeunload", saveProgressNow);
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "hidden") saveProgressNow();
+});
+
 let missedBombs = 0;    // რამდენი ბომბი დაეცა მიწაზე
 
 function updateLivesUI(){
   if (!livesEl) return;
   livesEl.textContent = "❤️".repeat(lives);
+   scheduleSaveProgress();
 }
 updateLivesUI();
 
@@ -148,6 +294,7 @@ function updateScoreUI() {
     unlockYellowHouse();
   }
 }
+  scheduleSaveProgress();
 
 
 // ქულების ცვლადი უკვე ზემოთ გაქვს let score = 0; (არ გააორმაგო)
@@ -984,9 +1131,17 @@ function showFullscreenAd() {
   return new Promise((resolve) => {
     ysdk.adv.showFullscreenAdv({
       callbacks: {
-        onOpen: () => console.log("Ad open"),
-        onClose: () => resolve({ ok: true }),
-        onError: (e) => resolve({ ok: false, reason: String(e || "ad error") })
+        onOpen: () => {
+          pauseAudioForAd();                // ✅ p.4.7
+        },
+        onClose: () => {
+          resumeAudioAfterAd();             // ✅ p.4.7
+          resolve({ ok: true });
+        },
+        onError: (e) => {
+          resumeAudioAfterAd();             // ✅ ensure restore even if failed
+          resolve({ ok: false, reason: String(e || "ad error") });
+        }
       }
     });
   });
@@ -1075,11 +1230,13 @@ function loadScores() {
   // ✅ migrate old schema to always have {score, date, name}
   list = list
     .filter(x => x && typeof x.score === "number")
-    .map(x => ({
-      score: x.score,
-      date: typeof x.date === "number" ? x.date : Date.now(),
-     name: (typeof x.name === "string" && x.name.trim()) ? x.name.trim() : "Игрок"
-    }));
+ .map(x => ({
+  score: x.score,
+  date: typeof x.date === "number" ? x.date : Date.now(),
+  name: (typeof x.name === "string" && x.name.trim())
+    ? x.name.trim()
+    : null
+}));
 
   return list;
 }
@@ -1172,6 +1329,42 @@ function stopGame() {
 
   // გაწმენდა ეკრანის (შენივე კლასებით)
   gameArea.querySelectorAll('.balloon-img, .balloon-pair, .bomb-img').forEach(el => el.remove());
+}
+function goToMainMenu() {
+  stopGame();
+  document.body.classList.remove("game-active");
+  mainMenu.classList.remove("hidden");
+}
+
+function fullRestart() {
+  stopGame();
+
+  score = 0;
+  lives = 3;
+  missedBombs = 0;
+  streakHouseId = null;
+  streakCount = 0;
+  gameOverPlayed = false;
+
+  // yellow reset
+  hasYellowHouse = false;
+  const yh = document.getElementById("house-yellow");
+  if (yh) yh.classList.add("hidden");
+  COLORS = COLORS.filter(c => c !== "yellow");
+
+  resetHousesState();
+  updateScoreUI();
+  updateLivesUI();
+
+  // თავიდან დაიწყე სუფთად
+  document.body.classList.add("game-active");
+  mainMenu.classList.add("hidden");
+  gameStarted = true;
+
+  clearTimeout(spawnTimerId);
+  spawnTimerId = null;
+
+  spawnLoop();
 }
 function resetHousesState() {
   houses.forEach(h => {
@@ -1286,19 +1479,20 @@ function t(key){
   return dict[key] || (translations.en[key] || key);
 }
 function detectInitialLanguage() {
-  // 1️⃣ localStorage
+  // 1) Yandex SDK auto-detect (REQUIRED by p.2.14)
+ const sdkLang = window.ysdk?.environment?.i18n?.lang;
+  if (sdkLang) {
+    const l = String(sdkLang).toLowerCase();
+    return l.startsWith("ru") ? "ru" : "en";
+  }
+
+  // 2) user choice fallback (only if SDK is not available)
   const saved = localStorage.getItem("game_lang");
   if (saved === "en" || saved === "ru") return saved;
 
-  // 2️⃣ Yandex SDK
-  if (ysdk && ysdk.environment && ysdk.environment.i18n) {
-    const lang = ysdk.environment.i18n.lang;
-    if (lang && lang.startsWith("en")) return "en";
-    if (lang && lang.startsWith("ru")) return "ru";
-  }
-
-  // 3️⃣ fallback
-  return "ru";
+  // 3) browser fallback (extra safety)
+  const navLang = (navigator.language || "").toLowerCase();
+  return navLang.startsWith("ru") ? "ru" : "en";
 }
 function changeLanguage(lang){
   currentLang = (lang === "ru") ? "ru" : "en";
@@ -1349,7 +1543,8 @@ function applyLanguage(lang){
   langButtons.forEach(btn => {
     btn.classList.toggle("active", btn.dataset.lang === lang);
   });
-  changeLanguage(lang); // ✅ აღარ იყოს დაკომენტარებული
+  changeLanguage(lang);
+   document.documentElement.lang = lang; // ✅ აღარ იყოს დაკომენტარებული
 }
 
 langButtons.forEach(btn => {
@@ -1378,7 +1573,7 @@ soundToggle.addEventListener("click", () => {
 updateSoundUI();
 
 // --- YANDEX SDK INIT ---
-let ysdk = null;
+window.ysdk = null;
 
 // === YANDEX LEADERBOARD (server-side) ===
 const YANDEX_LB_NAME = "balloonsscore";
@@ -1529,11 +1724,43 @@ const labelName = (item.score === currentScore) ? dict.youLabel : item.name;
 }
 
 if (window.YaGames && typeof YaGames.init === "function") {
-  YaGames.init().then((_ysdk) => {
-    ysdk = _ysdk;
+ YaGames.init().then((sdk) => {
+  window.ysdk = sdk;     // ✅ make it global for testing + stability
+  ysdk = window.ysdk;
+
 
     const detectedLang = detectInitialLanguage();
     applyLanguage(detectedLang);
+
+    // ✅ Restore progress after language is ready
+// ✅ If page was reloaded (Cmd+R / Refresh) — start from scratch
+let navType = "";
+try {
+  const nav = performance.getEntriesByType("navigation")[0];
+  navType = nav ? nav.type : "";
+} catch (e) {}
+
+if (navType === "reload") {
+  // full reset on browser refresh
+  try { localStorage.removeItem(PROGRESS_KEY); } catch (e) {}
+}
+
+// ✅ Restore progress only if NOT a reload
+const savedProgress = loadProgress();
+if (savedProgress && navType !== "reload") {
+  applyProgressSnapshot(savedProgress);
+
+  // optional: resume game if it was running
+  if (savedProgress.gameStarted) {
+    mainMenu.classList.add("hidden");
+    gameStarted = true;
+    spawnLoop();
+  }
+} else {
+  // ensure fresh state / show menu
+  mainMenu.classList.remove("hidden");
+  gameStarted = false;
+}
 
     // ✅ აქ უნდა იყოს
     initYandexLeaderboards();
@@ -1545,8 +1772,8 @@ if (window.YaGames && typeof YaGames.init === "function") {
 
   }).catch((e) => {
     console.log("Yandex SDK init error:", e);
-    applyLanguage("ru");
+   applyLanguage(detectInitialLanguage());
   });
 } else {
-  applyLanguage("ru");
+  applyLanguage(detectInitialLanguage());
 }

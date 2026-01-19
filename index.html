@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="">
 <head>
   <meta charset="UTF-8" />
 <meta name="viewport"
@@ -27,9 +27,7 @@
 </div>
   <!-- მთავარი ეკრანი/თამაში -->
   <div id="mainScreen">
-<div class="top-right-buttons">
-  <button id="btnSettings" class="btn-circle">⚙</button>
-</div>
+
 
     <div id="gameArea"></div>
 
@@ -37,21 +35,21 @@
 
 <div id="house-red" class="house level-0" data-color="red" data-need="5" data-has="0" data-level="0">
   <div class="house-inner">
-    <img src="./image/redh.png" alt="Red House" />
+    <img src="./image/redh.png" alt="Red House" draggable="false"/>
     <div class="anchor"></div>
   </div>
 </div>
 
       <div id="house-blue" class="house level-0" data-color="blue" data-need="5" data-has="0" data-level="0">
         <div class="house-inner">
-        <img src="./image/blueh.png" alt="Blue House" />
+        <img src="./image/blueh.png" alt="Blue House" draggable="false"/>
         <div class="anchor"></div>
       </div>
       </div>
 
       <div id="house-green" class="house level-0" data-color="green" data-need="5" data-has="0" data-level="0">
         <div class="house-inner">
-        <img src="./image/greenh.png" alt="Green House" />
+        <img src="./image/greenh.png" alt="Green House" draggable="false"/>
         <div class="anchor"></div>
       </div>
       </div>
@@ -59,7 +57,7 @@
 
 <div id="house-yellow" class="house level-0 hidden" data-color="yellow">
          <div class="house-inner">
-  <img src="./image/yellow.png" alt="Yellow House" />
+  <img src="./image/yellow.png" alt="Yellow House" draggable="false"/>
   <div class="anchor"></div>
 </div>
 </div>
@@ -131,8 +129,9 @@
     <button class="btn btn-ghost" id="closeSettingsBtn">Close</button>
   </div>
 </div>
+
  
-<script src="https://yandex.ru/games/sdk/v2"></script>
+<script src="https://yandex.ru/games/sdk/v2" defer></script>
   <script src="./script.js?v=999" defer></script>
   <script src="./mobile.js?v=999" defer></script>
 </body>
